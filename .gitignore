@@ -1,0 +1,12 @@
+.packages
+.pub/
+.dart_tool/
+
+build/
+
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+firebase_chatapp.iml
+
+android/app/google-services.json
