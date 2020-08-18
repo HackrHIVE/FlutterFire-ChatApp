@@ -16,7 +16,21 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ChatApp',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme(
+          primary: Color(0xff6200EE),
+          primaryVariant: Color(0xff3700B3),
+          secondary: Color(0xffBB86FC),
+          secondaryVariant: Color(0xff966acc),
+          surface: Colors.white,
+          background: Colors.white,
+          error: Color(0xff6200EE),
+          onPrimary: Colors.white,
+          onSecondary: Colors.black,
+          onSurface: Colors.black,
+          onBackground: Colors.black,
+          onError: Colors.white,
+          brightness: Brightness.light,
+        ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: handleHomePage(),

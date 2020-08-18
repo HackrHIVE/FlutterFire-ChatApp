@@ -3,10 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'Helper/OfflineStore.dart';
+
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Firestore _db = Firestore.instance;
+
+  OfflineStorage offlineStorage = new OfflineStorage();
 
   Stream<FirebaseUser> user;
   Stream<Map<String, dynamic>> profile;
@@ -39,6 +43,8 @@ class AuthService {
     FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
     print("signed in " + user.displayName);
     updateUserData(user);
+    await offlineStorage.saveUserInfo(
+        user.photoUrl, user.displayName, user.email, user.uid);
     return user;
   }
 
@@ -65,6 +71,7 @@ class AuthService {
 
   void signOut() => _auth.signOut();
 
+/*
   Stream<List<DocumentSnapshot>> getChat() {
     user.listen(
       (FirebaseUser dbUser) {
@@ -89,7 +96,7 @@ class AuthService {
       },
     );
     return Stream.empty();
-  }
+  }*/
 }
 
 final AuthService authService = AuthService();

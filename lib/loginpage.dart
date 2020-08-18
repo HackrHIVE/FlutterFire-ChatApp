@@ -17,16 +17,7 @@ class _LoginPageState extends State<LoginPage> {
             StreamBuilder(
               stream: authService.user,
               builder: (context, snapshot) {
-                return
-                    // snapshot.hasData
-                    //     ? MaterialButton(
-                    //         onPressed: () => authService.signOut(),
-                    //         color: Colors.red,
-                    //         textColor: Colors.black,
-                    //         child: Text('Signout'),
-                    //       )
-                    //     :
-                    MaterialButton(
+                return MaterialButton(
                   onPressed: () => authService.googleSignIn(),
                   color: Colors.white,
                   textColor: Colors.black,

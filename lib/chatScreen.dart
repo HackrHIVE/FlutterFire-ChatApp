@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_chatapp/auth.dart';
+import 'package:firebase_chatapp/chatDetailed.dart';
 import 'package:flutter/material.dart';
+
+import 'Helper/Database.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -9,30 +11,78 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  Future<List<DocumentSnapshot>> getList(lisChat) async {
-    List<DocumentSnapshot> chatList = new List<DocumentSnapshot>();
-    for (int i = 0; i < lisChat.length; i++) {
-      String x = lisChat[i];
-      print('Chat id : ' + x.toString());
-      await Firestore.instance.collection('chats').document(x).get().then(
-        (value) {
-          print(x.toString() +
-              ' :: ' +
-              'isGroup : ' +
-              value.data['isGroup'].toString());
-          chatList.add(value);
-          print('new length : ' + chatList.length.toString());
-          if (i == lisChat.length - 1) {
-            print('length before returning : ' + chatList.length.toString());
-            return chatList;
-          }
-        },
-      );
-    }
+  DatabaseHelper dbHelper;
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      dbHelper = new DatabaseHelper();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: null,
+        splashColor: Theme.of(context).colorScheme.onSecondary,
+        child: Icon(
+          Icons.add,
+        ),
+      ),
+      body: FutureBuilder(
+        future: dbHelper.getChats(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            QuerySnapshot qSnap = snapshot.data;
+            List<DocumentSnapshot> docs = qSnap.documents;
+            if (docs.length == 0)
+              return Center(
+                child: Text('No Chats yet!'),
+              );
+            return ListView.builder(
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  elevation: 8.0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: InkWell(
+                    splashColor: Theme.of(context).colorScheme.primary,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatDetailed(
+                          chatId: docs[index].documentID.toString(),
+                        ),
+                      ),
+                    ),
+                    child: Container(
+                      margin: EdgeInsets.all(10.0),
+                      height: MediaQuery.of(context).size.height * 0.08,
+                      child: Center(
+                        child: Text(
+                          docs[index].documentID.toString(),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: new AlwaysStoppedAnimation(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          );
+        },
+      ),
+    );
     return StreamBuilder(
       stream: FirebaseAuth.instance.currentUser().asStream(),
       builder: (context, snapshot) {
@@ -46,7 +96,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 .snapshots(),
             builder: (BuildContext context, AsyncSnapshot snapshotChat) {
               if (snapshotChat.hasData) {
-                print(snapshotChat.data.toString());
                 return (snapshotChat.data.documents.length == 0)
                     ? Center(
                         child: Text('No Chats'),
@@ -56,17 +105,32 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemBuilder: (context, index) {
                           DocumentSnapshot dSnap =
                               snapshotChat.data.documents[index];
-                          return Container(
-                            decoration: BoxDecoration(
-                                shape: BoxShape.rectangle,
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.orange),
-                            margin: EdgeInsets.all(10.0),
-                            width: MediaQuery.of(context).size.width,
-                            height: 100,
-                            child: Center(
-                              child: Text(
-                                dSnap.documentID.toString(),
+                          return Card(
+                            color: Colors.amberAccent,
+                            margin: EdgeInsets.all(8.0),
+                            elevation: 8.0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                            ),
+                            child: InkWell(
+                              splashColor: Colors.blueAccent,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatDetailed(
+                                    chatId: dSnap.documentID.toString(),
+                                  ),
+                                ),
+                              ),
+                              child: Container(
+                                margin: EdgeInsets.all(10.0),
+                                height:
+                                    MediaQuery.of(context).size.height * 0.08,
+                                child: Center(
+                                  child: Text(
+                                    dSnap.documentID.toString(),
+                                  ),
+                                ),
                               ),
                             ),
                           );
@@ -74,13 +138,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       );
               }
               return Center(
-                child: Text('Loading Chats...'),
+                child: CircularProgressIndicator(
+                  valueColor: new AlwaysStoppedAnimation(
+                    Color(0xff49ffa0),
+                  ),
+                ),
               );
             },
           );
         } else
           return Center(
-            child: Text('Loading Chats...'),
+            child: CircularProgressIndicator(
+              valueColor: new AlwaysStoppedAnimation(
+                Color(0xff49ffa0),
+              ),
+            ),
           );
       },
     );
