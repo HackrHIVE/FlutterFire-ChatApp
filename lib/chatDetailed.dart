@@ -12,6 +12,7 @@ class ChatDetailed extends StatefulWidget {
 class _ChatDetailedState extends State<ChatDetailed> {
   String myId, yourId;
   TextEditingController messageController;
+  Timestamp past = new Timestamp.fromDate(new DateTime(2019));
   @override
   void initState() {
     super.initState();
@@ -136,9 +137,16 @@ class _ChatDetailedState extends State<ChatDetailed> {
                   reverse: true,
                   itemBuilder: (context, index) {
                     DocumentSnapshot message = snapshot.data.documents[index];
-                    return messageItem(message, context);
-                    // ? myMessage(message, context)
-                    // : yourMessage(message, context);
+                    return _messageItem(message, context);
+
+                    return sameDay(message.data['time'])
+                        ? _messageItem(message, context)
+                        : Column(
+                            children: [
+                              _timeDivider(message.data['time']),
+                              _messageItem(message, context),
+                            ],
+                          );
                   },
                 )
               : Container();
@@ -149,10 +157,45 @@ class _ChatDetailedState extends State<ChatDetailed> {
     );
   }
 
-  Widget messageItem(DocumentSnapshot message, BuildContext context) {
+  List<String> months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  Widget _timeDivider(Timestamp time) {
+    DateTime t = time.toDate();
+    return Text(t.day.toString() + ' ' + months.elementAt(t.month - 1));
+  }
+
+  bool sameDay(Timestamp present) {
+    DateTime pastTime = past.toDate();
+    DateTime presentTime = present.toDate();
+    if (pastTime.year < presentTime.year) {
+      past = present;
+      return false;
+    }
+    if (pastTime.month < presentTime.month) {
+      past = present;
+      return false;
+    }
+    past = present;
+    return pastTime.day == presentTime.day;
+  }
+
+  Widget _messageItem(DocumentSnapshot message, BuildContext context) {
     final bool isMe = message.data['from'] == myId;
     Timestamp time = message.data['time'];
-    print('time is ' + time.toDate().toString());
     String minute = time.toDate().minute > 9
         ? time.toDate().minute.toString()
         : '0' + time.toDate().minute.toString();
