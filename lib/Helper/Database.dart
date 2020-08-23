@@ -23,4 +23,16 @@ class DatabaseHelper {
         .orderBy('lastActive', descending: true)
         .getDocuments();
   }
+
+  generateChatId(String username1, String username2) {
+    return username1.compareTo(username2) < 0
+        ? username1 + '-' + username2
+        : username2 + '-' + username1;
+  }
+
+  checkChatExistsOrNot(String username1, String username2) async {
+    String chatId = generateChatId(username1, username2);
+    DocumentSnapshot doc = await _db.collection('chats').document(chatId).get();
+    return doc.exists;
+  }
 }
