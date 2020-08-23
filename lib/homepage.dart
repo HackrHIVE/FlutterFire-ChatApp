@@ -1,8 +1,6 @@
 import 'package:firebase_chatapp/profileScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
-import 'addScreen.dart';
 import 'chatScreen.dart';
 
 class MyHomePage extends StatefulWidget {
