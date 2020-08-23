@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'ChatApp',
       theme: ThemeData(
         colorScheme: ColorScheme(
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
           secondaryVariant: Color(0xff966acc),
           surface: Colors.white,
           background: Colors.white,
-          error: Color(0xff6200EE),
+          error: Colors.black,
           onPrimary: Colors.white,
           onSecondary: Colors.black,
           onSurface: Colors.black,
