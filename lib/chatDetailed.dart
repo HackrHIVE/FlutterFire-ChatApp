@@ -2,31 +2,42 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'Helper/Database.dart';
+import 'Helper/OfflineStore.dart';
+
 class ChatDetailed extends StatefulWidget {
-  String chatId;
-  ChatDetailed({this.chatId});
+  String userId;
+  ChatDetailed({this.userId});
   @override
   _ChatDetailedState createState() => _ChatDetailedState();
 }
 
 class _ChatDetailedState extends State<ChatDetailed> {
-  String myId, yourId;
+  String myId, userId;
   TextEditingController messageController;
   Timestamp past = new Timestamp.fromDate(new DateTime(2019));
+  DatabaseHelper dbHelper;
+  String chatId;
+  OfflineStorage offlineStorage;
   @override
   void initState() {
     super.initState();
     messageController = new TextEditingController();
-    FirebaseAuth.instance.currentUser().then((FirebaseUser user) {
+    dbHelper = new DatabaseHelper();
+    offlineStorage = new OfflineStorage();
+    offlineStorage.getUserInfo().then((val) {
       setState(() {
-        myId = user.uid.toString();
+        Map<dynamic, dynamic> user = val;
+        userId = widget.userId;
+        myId = user['uid'].toString();
+        chatId = dbHelper.generateChatId(myId, userId);
+        print("generated chatID : " + chatId.toString());
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    String chatId = widget.chatId;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -35,7 +46,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
         child: Column(
           children: [
             Flexible(
-              child: _chatBody(chatId),
+              child: _chatBody(userId),
             ),
             new Divider(
               height: 1.0,
@@ -107,9 +118,22 @@ class _ChatDetailedState extends State<ChatDetailed> {
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
           child: FloatingActionButton(
-            onPressed: () {
-              print("Message is : " + messageController.text);
+            onPressed: () async {
+              String message = messageController.text;
               messageController.clear();
+              // bool exists = await dbHelper.checkChatExistsOrNot(userId, myId);
+              // if (!exists) {
+              // } else {
+              //   await Firestore.instance
+              //       .collection('chats')
+              //       .document(chatId)
+              //       .collection('messages')
+              //       .add(
+              //     {'from': myId, 'message': message, 'time': Timestamp.now()},
+              //   );
+              //   print('sent!');
+              // }
+              await dbHelper.sendMessage(userId, myId, message);
             },
             child: Icon(
               Icons.send,
@@ -121,35 +145,51 @@ class _ChatDetailedState extends State<ChatDetailed> {
     );
   }
 
-  StreamBuilder<QuerySnapshot> _chatBody(String chatId) {
+/*
+pSoJeGqd7FfAjLBEPdXwF3c10ou1
+Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
+*/
+  StreamBuilder<QuerySnapshot> _chatBody(String userId) {
     return StreamBuilder(
       stream: Firestore.instance
           .collection('chats')
-          .document(chatId)
+          .document(dbHelper.generateChatId(userId, myId))
           .collection('messages')
           .orderBy('time', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasData)
-          return snapshot.hasData
+          return snapshot.data.documents.length != 0
               ? ListView.builder(
                   itemCount: snapshot.data.documents.length,
                   reverse: true,
                   itemBuilder: (context, index) {
                     DocumentSnapshot message = snapshot.data.documents[index];
-                    return _messageItem(message, context);
-
-                    return sameDay(message.data['time'])
+                    if (index == 0) {
+                      past = message.data['time'];
+                      return _messageItem(message, context);
+                    }
+                    Timestamp toPass = past;
+                    if (index == snapshot.data.documents.length - 1)
+                      return Column(
+                        children: [
+                          _timeDivider(message.data['time']),
+                          _messageItem(message, context),
+                          _timeDivider(toPass),
+                        ],
+                      );
+                    past = message.data['time'];
+                    return sameDay(message.data['time'], toPass)
                         ? _messageItem(message, context)
                         : Column(
                             children: [
-                              _timeDivider(message.data['time']),
                               _messageItem(message, context),
+                              _timeDivider(toPass),
                             ],
                           );
                   },
                 )
-              : Container();
+              : Center(child: Text("No messages yet!"));
         return Center(
           child: Text('Loading...'),
         );
@@ -178,78 +218,89 @@ class _ChatDetailedState extends State<ChatDetailed> {
     return Text(t.day.toString() + ' ' + months.elementAt(t.month - 1));
   }
 
-  bool sameDay(Timestamp present) {
-    DateTime pastTime = past.toDate();
+  bool sameDay(Timestamp present, Timestamp passt) {
+    DateTime pastTime = passt.toDate();
     DateTime presentTime = present.toDate();
-    if (pastTime.year < presentTime.year) {
-      past = present;
-      return false;
-    }
-    if (pastTime.month < presentTime.month) {
-      past = present;
-      return false;
-    }
-    past = present;
+    if (pastTime.year < presentTime.year) return false;
+    if (pastTime.month < presentTime.month) return false;
+    print("pastDay: " + pastTime.day.toString());
+    print("presentDay: " + presentTime.day.toString());
     return pastTime.day == presentTime.day;
   }
 
   Widget _messageItem(DocumentSnapshot message, BuildContext context) {
     final bool isMe = message.data['from'] == myId;
     Timestamp time = message.data['time'];
-    String minute = time.toDate().minute > 9
-        ? time.toDate().minute.toString()
-        : '0' + time.toDate().minute.toString();
-    String ampm = time.toDate().hour >= 12 ? "PM" : "AM";
-    int hour =
-        time.toDate().hour >= 12 ? time.toDate().hour % 12 : time.toDate().hour;
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-      margin: isMe
-          ? EdgeInsets.only(
-              left: 80.0,
-              bottom: 8.0,
-              top: 8.0,
-            )
-          : EdgeInsets.only(
-              right: 80.0,
-              bottom: 8.0,
-              top: 8.0,
-            ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            hour.toString() + ":" + minute.toString() + " " + ampm,
-            style: TextStyle(
-              color: Color(0xfff0f696),
-              fontSize: 12.0,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Text(
-            message.data['message'].toString(),
-            style: TextStyle(
-              color: isMe
-                  ? Theme.of(context).colorScheme.onSecondary
-                  : Theme.of(context).colorScheme.onPrimary,
-              fontSize: 16.0,
-            ),
-          ),
-        ],
-      ),
-      decoration: BoxDecoration(
-        color: isMe
-            ? Theme.of(context).colorScheme.secondary
-            : Theme.of(context).colorScheme.secondaryVariant,
-        borderRadius: isMe
-            ? BorderRadius.only(
-                topLeft: Radius.circular(15.0),
-                bottomLeft: Radius.circular(15.0),
+    DateTime ttime = time.toDate();
+    String minute = ttime.minute > 9
+        ? ttime.minute.toString()
+        : '0' + ttime.minute.toString();
+    String ampm = ttime.hour >= 12 ? "PM" : "AM";
+    int hour = ttime.hour >= 12 ? ttime.hour % 12 : ttime.hour;
+    int date = ttime.day;
+    int month = ttime.month;
+    int year = ttime.year;
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+        margin: isMe
+            ? EdgeInsets.only(
+                left: 80.0,
+                bottom: 8.0,
+                top: 8.0,
               )
-            : BorderRadius.only(
-                topRight: Radius.circular(15.0),
-                bottomRight: Radius.circular(15.0),
+            : EdgeInsets.only(
+                right: 80.0,
+                bottom: 8.0,
+                top: 8.0,
               ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              hour.toString() +
+                  ":" +
+                  minute.toString() +
+                  " " +
+                  ampm +
+                  ', ' +
+                  date.toString() +
+                  ' ' +
+                  months[month - 1] +
+                  ' ' +
+                  year.toString(),
+              style: TextStyle(
+                color: Color(0xfff0f696),
+                fontSize: 12.0,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              message.data['message'].toString(),
+              style: TextStyle(
+                color: isMe
+                    ? Theme.of(context).colorScheme.onSecondary
+                    : Theme.of(context).colorScheme.onPrimary,
+                fontSize: 16.0,
+              ),
+            ),
+          ],
+        ),
+        decoration: BoxDecoration(
+          color: isMe
+              ? Theme.of(context).colorScheme.secondary
+              : Theme.of(context).colorScheme.secondaryVariant,
+          borderRadius: isMe
+              ? BorderRadius.only(
+                  topLeft: Radius.circular(15.0),
+                  bottomLeft: Radius.circular(15.0),
+                )
+              : BorderRadius.only(
+                  topRight: Radius.circular(15.0),
+                  bottomRight: Radius.circular(15.0),
+                ),
+        ),
       ),
     );
   }
