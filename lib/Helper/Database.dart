@@ -25,14 +25,30 @@ class DatabaseHelper {
   }
 
   generateChatId(String username1, String username2) {
-    return username1.compareTo(username2) < 0
-        ? username1 + '-' + username2
-        : username2 + '-' + username1;
+    return username1.toString().compareTo(username2.toString()) < 0
+        ? username1.toString() + '-' + username2.toString()
+        : username2.toString() + '-' + username1.toString();
   }
 
-  checkChatExistsOrNot(String username1, String username2) async {
+  Future<bool> checkChatExistsOrNot(String username1, String username2) async {
     String chatId = generateChatId(username1, username2);
     DocumentSnapshot doc = await _db.collection('chats').document(chatId).get();
     return doc.exists;
+  }
+
+  sendMessage(String to, String from, String msg) async {
+    //TODO: study about Firebase Functions and figure it out.
+    bool existsOrNot = await checkChatExistsOrNot(to, from);
+    if (!existsOrNot) {
+    } else {
+      await Firestore.instance
+          .collection('chats')
+          .document(generateChatId(to, from))
+          .collection('messages')
+          .add(
+        {'from': from, 'message': msg, 'time': Timestamp.now()},
+      );
+      print('sent!');
+    }
   }
 }
