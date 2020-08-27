@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_chatapp/profileScreen.dart';
 import 'package:flutter/material.dart';
 
 import 'Helper/Database.dart';
 import 'Helper/OfflineStore.dart';
 
 class ChatDetailed extends StatefulWidget {
-  String userId;
-  ChatDetailed({this.userId});
+  Map<String, dynamic> userData;
+  ChatDetailed({this.userData});
   @override
   _ChatDetailedState createState() => _ChatDetailedState();
 }
@@ -19,6 +19,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
   DatabaseHelper dbHelper;
   String chatId;
   OfflineStorage offlineStorage;
+  Map<String, dynamic> userData;
   @override
   void initState() {
     super.initState();
@@ -28,10 +29,11 @@ class _ChatDetailedState extends State<ChatDetailed> {
     offlineStorage.getUserInfo().then((val) {
       setState(() {
         Map<dynamic, dynamic> user = val;
-        userId = widget.userId;
+        userId = widget.userData['uid'].toString();
         myId = user['uid'].toString();
         chatId = dbHelper.generateChatId(myId, userId);
-        print("generated chatID : " + chatId.toString());
+        userData = widget.userData;
+        print("caught User : " + userData['name'].toString());
       });
     });
   }
@@ -39,24 +41,65 @@ class _ChatDetailedState extends State<ChatDetailed> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Flexible(
-              child: _chatBody(userId),
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.primary,
+      // ),
+      body: Column(
+        children: [
+          AppBar(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            title: InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileScreen(
+                    userData: userData,
+                  ),
+                ),
+              ),
+              splashColor: Theme.of(context).colorScheme.primary,
+              focusColor: Theme.of(context).colorScheme.primary,
+              highlightColor: Theme.of(context).colorScheme.primary,
+              hoverColor: Theme.of(context).colorScheme.primary,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: Row(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.1,
+                      height: MediaQuery.of(context).size.width * 0.1,
+                      decoration: new BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: new DecorationImage(
+                          fit: BoxFit.cover,
+                          image: new NetworkImage(
+                            userData['photo'].toString(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                    Text(
+                      userData['name'].toString(),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary),
+                    )
+                  ],
+                ),
+              ),
             ),
-            new Divider(
-              height: 1.0,
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.10,
-              child: _messageComposer(),
-            ),
-          ],
-        ),
+          ),
+          Flexible(
+            child: _chatBody(userId),
+          ),
+          new Divider(
+            height: 1.0,
+          ),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.10,
+            child: _messageComposer(),
+          ),
+        ],
       ),
     );
   }
@@ -120,20 +163,10 @@ class _ChatDetailedState extends State<ChatDetailed> {
           child: FloatingActionButton(
             onPressed: () async {
               String message = messageController.text;
-              messageController.clear();
-              // bool exists = await dbHelper.checkChatExistsOrNot(userId, myId);
-              // if (!exists) {
-              // } else {
-              //   await Firestore.instance
-              //       .collection('chats')
-              //       .document(chatId)
-              //       .collection('messages')
-              //       .add(
-              //     {'from': myId, 'message': message, 'time': Timestamp.now()},
-              //   );
-              //   print('sent!');
-              // }
-              await dbHelper.sendMessage(userId, myId, message);
+              if (message.isNotEmpty) {
+                messageController.clear();
+                await dbHelper.sendMessage(userId, myId, message);
+              }
             },
             child: Icon(
               Icons.send,
@@ -145,10 +178,6 @@ class _ChatDetailedState extends State<ChatDetailed> {
     );
   }
 
-/*
-pSoJeGqd7FfAjLBEPdXwF3c10ou1
-Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
-*/
   StreamBuilder<QuerySnapshot> _chatBody(String userId) {
     return StreamBuilder(
       stream: Firestore.instance
@@ -165,6 +194,13 @@ Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
                   reverse: true,
                   itemBuilder: (context, index) {
                     DocumentSnapshot message = snapshot.data.documents[index];
+                    if (snapshot.data.documents.length == 1)
+                      return Column(
+                        children: [
+                          _timeDivider(message.data['time']),
+                          _messageItem(message, context),
+                        ],
+                      );
                     if (index == 0) {
                       past = message.data['time'];
                       return _messageItem(message, context);
@@ -175,7 +211,8 @@ Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
                         children: [
                           _timeDivider(message.data['time']),
                           _messageItem(message, context),
-                          _timeDivider(toPass),
+                          if (!sameDay(toPass, message.data['time']))
+                            _timeDivider(toPass),
                         ],
                       );
                     past = message.data['time'];
@@ -215,7 +252,11 @@ Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
 
   Widget _timeDivider(Timestamp time) {
     DateTime t = time.toDate();
-    return Text(t.day.toString() + ' ' + months.elementAt(t.month - 1));
+    return Text(t.day.toString() +
+        ' ' +
+        months.elementAt(t.month - 1) +
+        ', ' +
+        t.year.toString());
   }
 
   bool sameDay(Timestamp present, Timestamp passt) {
@@ -223,8 +264,6 @@ Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
     DateTime presentTime = present.toDate();
     if (pastTime.year < presentTime.year) return false;
     if (pastTime.month < presentTime.month) return false;
-    print("pastDay: " + pastTime.day.toString());
-    print("presentDay: " + presentTime.day.toString());
     return pastTime.day == presentTime.day;
   }
 
@@ -237,9 +276,6 @@ Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
         : '0' + ttime.minute.toString();
     String ampm = ttime.hour >= 12 ? "PM" : "AM";
     int hour = ttime.hour >= 12 ? ttime.hour % 12 : ttime.hour;
-    int date = ttime.day;
-    int month = ttime.month;
-    int year = ttime.year;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -259,17 +295,7 @@ Qa7SHEdqJNM36uamJ4NuhRZ6hxf2
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              hour.toString() +
-                  ":" +
-                  minute.toString() +
-                  " " +
-                  ampm +
-                  ', ' +
-                  date.toString() +
-                  ' ' +
-                  months[month - 1] +
-                  ' ' +
-                  year.toString(),
+              hour.toString() + ":" + minute.toString() + " " + ampm,
               style: TextStyle(
                 color: Color(0xfff0f696),
                 fontSize: 12.0,
