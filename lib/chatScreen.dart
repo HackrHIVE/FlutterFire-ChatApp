@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_chatapp/chatDetailed.dart';
 import 'package:flutter/material.dart';
 
@@ -14,9 +13,13 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   DatabaseHelper dbHelper;
   OfflineStorage offlineStorage;
+  TextEditingController userController;
+  FocusNode focusNode;
   @override
   void initState() {
     super.initState();
+    userController = new TextEditingController();
+    focusNode = new FocusNode();
     setState(() {
       dbHelper = new DatabaseHelper();
       offlineStorage = new OfflineStorage();
@@ -27,74 +30,149 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: null,
+        onPressed: () {
+          showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (context) => _buildPopUpMessage(context),
+          );
+        },
         splashColor: Theme.of(context).colorScheme.onSecondary,
         child: Icon(
           Icons.add,
         ),
       ),
       body: FutureBuilder(
-        future: dbHelper.getChats(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            QuerySnapshot qSnap = snapshot.data;
-            List<DocumentSnapshot> docs = qSnap.documents;
-            if (docs.length == 0)
-              return Center(
-                child: Text('No Chats yet!'),
-              );
-            return ListView.builder(
-              itemCount: docs.length,
-              itemBuilder: (context, index) {
-                List<dynamic> members = docs[index].data['members'];
-                String userId;
-                return FutureBuilder(
-                  future: offlineStorage.getUserInfo(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      Map<dynamic, dynamic> user = snapshot.data;
-                      String myId = user['uid'];
+        future: offlineStorage.getUserInfo(),
+        builder: (BuildContext context, AsyncSnapshot userDataSnapshot) {
+          if (userDataSnapshot.hasData) {
+            Map<dynamic, dynamic> user = userDataSnapshot.data;
+            String myId = user['uid'];
+            return StreamBuilder(
+              stream: dbHelper.getChats(myId),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  QuerySnapshot qSnap = snapshot.data;
+                  List<DocumentSnapshot> docs = qSnap.documents;
+                  if (docs.length == 0)
+                    return Center(
+                      child: Text('No Chats yet!'),
+                    );
+                  return ListView.builder(
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      List<dynamic> members = docs[index].data['members'];
+                      String userId;
                       userId = members.elementAt(0) == myId
                           ? members.elementAt(1)
                           : members.elementAt(0);
-                      print('Setting userId');
-                      print('UserId : ' + userId.toString());
-                      return Card(
-                        margin: EdgeInsets.all(8.0),
-                        elevation: 8.0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5.0),
-                        ),
-                        child: InkWell(
-                          splashColor: Theme.of(context).colorScheme.primary,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatDetailed(
-                                userId: userId.toString(),
+                      return FutureBuilder(
+                        future: dbHelper.getUserByUsername(userId),
+                        builder: (context, _snapshot) {
+                          if (_snapshot.hasData) {
+                            DocumentSnapshot docSnapUser = _snapshot.data;
+                            Map<String, dynamic> _user = docSnapUser.data;
+                            print('Sending this user ahead: ' +
+                                _user['name'].toString());
+                            return Card(
+                              margin: EdgeInsets.all(8.0),
+                              elevation: 8.0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: InkWell(
+                                splashColor:
+                                    Theme.of(context).colorScheme.primary,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatDetailed(
+                                      userData: _user,
+                                    ),
+                                  ),
+                                ),
+                                child: Container(
+                                  margin: EdgeInsets.all(10.0),
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.08,
+                                  child: Center(
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.15,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.15,
+                                          decoration: new BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            image: new DecorationImage(
+                                              fit: BoxFit.cover,
+                                              image: new NetworkImage(
+                                                _user['photo'].toString(),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.02,
+                                        ),
+                                        Text(
+                                          _user['name'].toString(),
+                                        ),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.5,
+                                          child: Align(
+                                            alignment: Alignment.centerRight,
+                                            child: _timeDivider(
+                                                docs[index].data['lastActive']),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return Card(
+                            margin: EdgeInsets.all(8.0),
+                            elevation: 8.0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                            ),
+                            child: Container(
+                              margin: EdgeInsets.all(10.0),
+                              height: MediaQuery.of(context).size.height * 0.08,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: new AlwaysStoppedAnimation(
+                                    Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                          child: Container(
-                            margin: EdgeInsets.all(10.0),
-                            height: MediaQuery.of(context).size.height * 0.08,
-                            child: Center(
-                              child: Text(
-                                docs[index].documentID.toString(),
-                              ),
-                            ),
-                          ),
-                        ),
+                          );
+                        },
                       );
-                    }
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: new AlwaysStoppedAnimation(
-                          Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    );
-                  },
+                    },
+                  );
+                }
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: new AlwaysStoppedAnimation(
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 );
               },
             );
@@ -109,81 +187,190 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       ),
     );
-    return StreamBuilder(
-      stream: FirebaseAuth.instance.currentUser().asStream(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          FirebaseUser user = snapshot.data;
-          return StreamBuilder(
-            stream: Firestore.instance
-                .collection('users')
-                .document(user.uid)
-                .collection('chats')
-                .snapshots(),
-            builder: (BuildContext context, AsyncSnapshot snapshotChat) {
-              if (snapshotChat.hasData) {
-                return (snapshotChat.data.documents.length == 0)
-                    ? Center(
-                        child: Text('No Chats'),
-                      )
-                    : ListView.builder(
-                        itemCount: snapshotChat.data.documents.length,
-                        itemBuilder: (context, index) {
-                          DocumentSnapshot dSnap =
-                              snapshotChat.data.documents[index];
-                          List<dynamic> members = dSnap.data['members'];
+  }
 
-                          String userId;
-                          return Card(
-                            color: Colors.amberAccent,
-                            margin: EdgeInsets.all(8.0),
-                            elevation: 8.0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: InkWell(
-                              splashColor: Colors.blueAccent,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatDetailed(
-                                    userId: userId,
-                                  ),
-                                ),
-                              ),
-                              child: Container(
-                                margin: EdgeInsets.all(10.0),
-                                height:
-                                    MediaQuery.of(context).size.height * 0.08,
-                                child: Center(
-                                  child: Text(
-                                    dSnap.documentID.toString(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-              }
-              return Center(
-                child: CircularProgressIndicator(
-                  valueColor: new AlwaysStoppedAnimation(
-                    Color(0xff49ffa0),
+  List<String> months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  Widget _timeDivider(Timestamp time) {
+    DateTime t = time.toDate();
+    String minute =
+        t.minute > 9 ? t.minute.toString() : '0' + t.minute.toString();
+    String ampm = t.hour >= 12 ? "PM" : "AM";
+    int hour = t.hour >= 12 ? t.hour % 12 : t.hour;
+    return Text(hour.toString() +
+        ':' +
+        minute +
+        ' ' +
+        ampm +
+        ' ' +
+        t.day.toString() +
+        ' ' +
+        months.elementAt(t.month - 1) +
+        ', ' +
+        t.year.toString());
+  }
+
+  Widget _buildPopUpMessage(context) {
+    final _formKey = GlobalKey<FormState>();
+    return Align(
+      alignment: Alignment.center,
+      child: Container(
+        padding: EdgeInsets.all(8.0),
+        height: MediaQuery.of(context).size.width * .5,
+        width: MediaQuery.of(context).size.width * .6,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(40),
+        ),
+        margin: EdgeInsets.only(bottom: 50, left: 12, right: 12),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              SizedBox(
+                height: MediaQuery.of(context).size.width * .1,
+                child: Center(
+                  child: new RichText(
+                    text: new TextSpan(
+                      // Note: Styles for TextSpans must be explicitly defined.
+                      // Child text spans will inherit styles from parent
+                      style: new TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black,
+                      ),
+                      children: <TextSpan>[
+                        new TextSpan(
+                          text: 'username',
+                          style: new TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        new TextSpan(
+                          text: '@gmail.com',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              );
-            },
-          );
-        } else
-          return Center(
-            child: CircularProgressIndicator(
-              valueColor: new AlwaysStoppedAnimation(
-                Color(0xff49ffa0),
               ),
-            ),
-          );
-      },
+              SizedBox(
+                height: MediaQuery.of(context).size.width * .2,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Material(
+                      child: TextFormField(
+                        autofocus: true,
+                        validator: (value) {
+                          if (value.isEmpty)
+                            return "Username must not be empty";
+                        },
+                        controller: userController,
+                        decoration: new InputDecoration(
+                          border: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
+                          ),
+                          focusedBorder: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
+                          ),
+                          enabledBorder: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
+                          ),
+                          errorBorder: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
+                          ),
+                          filled: true,
+                          hintText: "Type in only Username",
+                          hintStyle: TextStyle(fontSize: 16.0),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.width * .1,
+                child: Center(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: RaisedButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18.0),
+                      ),
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: Text(
+                        'Let\'s chat with your friend.',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSecondary),
+                      ),
+                      onPressed: () async {
+                        FocusScope.of(context).requestFocus(focusNode);
+                        final form = _formKey.currentState;
+                        if (form.validate()) {
+                          _formKey.currentState.save();
+                          QuerySnapshot doc = await dbHelper.getUserByEmail(
+                              userController.text + '@gmail.com');
+                          if (doc.documents.length != 0) {
+                            DocumentSnapshot user = doc.documents[0];
+                            Map<String, dynamic> userData = user.data;
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatDetailed(
+                                  userData: userData,
+                                ),
+                              ),
+                            );
+                            print(user.data['name'].toString());
+                          } else {
+                            print('No user');
+                            Navigator.pop(context);
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
