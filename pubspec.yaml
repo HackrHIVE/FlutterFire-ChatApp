@@ -31,7 +31,7 @@ dependencies:
   
   cloud_firestore: ^0.13.7
   firebase_auth: ^0.16.1
-  lottie: 
+  lottie: ^0.6.0
   google_sign_in: ^4.5.1
   rxdart: ^0.24.1
   persistent_bottom_nav_bar: ^1.5.5
