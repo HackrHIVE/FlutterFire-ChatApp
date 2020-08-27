@@ -70,33 +70,6 @@ class AuthService {
   }
 
   void signOut() => _auth.signOut();
-
-/*
-  Stream<List<DocumentSnapshot>> getChat() {
-    user.listen(
-      (FirebaseUser dbUser) {
-        List<DocumentSnapshot> out = [];
-        String uid = dbUser.uid.toString();
-        List<dynamic> lisChat;
-        _db
-            .collection('users')
-            .document(uid)
-            .get()
-            .then((DocumentSnapshot doc) {
-          lisChat = doc.data['chats'];
-          for (dynamic x in lisChat) {
-            _db
-                .collection('chats')
-                .document(x.toString())
-                .get()
-                .then((value) => out.add(value));
-          }
-          return out;
-        });
-      },
-    );
-    return Stream.empty();
-  }*/
 }
 
 final AuthService authService = AuthService();
