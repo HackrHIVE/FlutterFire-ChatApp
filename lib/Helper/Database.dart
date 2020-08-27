@@ -14,14 +14,20 @@ class DatabaseHelper {
     return await _db.collection('users').document(username).get();
   }
 
-  //TODO:Add all functionalities of Firestore here required for app.
-  getChats() async {
-    Map<String, String> userInfo = await offlineStorage.getUserInfo();
+  getUserByEmail(String email) async {
     return await _db
-        .collection('chats')
-        .where('members', arrayContains: userInfo['uid'].toString())
-        .orderBy('lastActive', descending: true)
+        .collection('users')
+        .where('email', isEqualTo: email)
         .getDocuments();
+  }
+
+  //TODO:Add all functionalities of Firestore here required for app.
+  getChats(String uid) {
+    return _db
+        .collection('chats')
+        .where('members', arrayContains: uid)
+        .orderBy('lastActive', descending: true)
+        .snapshots();
   }
 
   generateChatId(String username1, String username2) {
@@ -37,18 +43,36 @@ class DatabaseHelper {
   }
 
   sendMessage(String to, String from, String msg) async {
-    //TODO: study about Firebase Functions and figure it out.
     bool existsOrNot = await checkChatExistsOrNot(to, from);
+    Firestore tempDb = Firestore.instance;
+    String chatId = generateChatId(from, to);
     if (!existsOrNot) {
-    } else {
-      await Firestore.instance
+      List<String> members = [to, from];
+      Timestamp now = Timestamp.now();
+      await tempDb
           .collection('chats')
           .document(generateChatId(to, from))
           .collection('messages')
           .add(
-        {'from': from, 'message': msg, 'time': Timestamp.now()},
+        {'from': from, 'message': msg, 'time': now},
       );
-      print('sent!');
+      await tempDb
+          .collection('chats')
+          .document(chatId)
+          .setData({'lastActive': now, 'members': members});
+    } else {
+      Timestamp now = Timestamp.now();
+      await tempDb
+          .collection('chats')
+          .document(chatId)
+          .collection('messages')
+          .add(
+        {'from': from, 'message': msg, 'time': now},
+      );
+      await tempDb
+          .collection('chats')
+          .document(chatId)
+          .updateData({'lastActive': now});
     }
   }
 }
