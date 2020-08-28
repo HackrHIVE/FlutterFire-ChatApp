@@ -14,12 +14,11 @@ class _ChatScreenState extends State<ChatScreen> {
   DatabaseHelper dbHelper;
   OfflineStorage offlineStorage;
   TextEditingController userController;
-  FocusNode focusNode;
+  final _scaffKey = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     super.initState();
     userController = new TextEditingController();
-    focusNode = new FocusNode();
     setState(() {
       dbHelper = new DatabaseHelper();
       offlineStorage = new OfflineStorage();
@@ -29,6 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffKey,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
@@ -227,7 +227,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildPopUpMessage(context) {
     final _formKey = GlobalKey<FormState>();
     return Align(
-      alignment: Alignment.center,
+      alignment: Alignment.topCenter,
       child: Container(
         padding: EdgeInsets.all(8.0),
         height: MediaQuery.of(context).size.width * .5,
@@ -236,141 +236,171 @@ class _ChatScreenState extends State<ChatScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(40),
         ),
-        margin: EdgeInsets.only(bottom: 50, left: 12, right: 12),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: <Widget>[
-              SizedBox(
-                height: MediaQuery.of(context).size.width * .1,
-                child: Center(
-                  child: new RichText(
-                    text: new TextSpan(
-                      // Note: Styles for TextSpans must be explicitly defined.
-                      // Child text spans will inherit styles from parent
-                      style: new TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.black,
-                      ),
-                      children: <TextSpan>[
-                        new TextSpan(
-                          text: 'username',
-                          style: new TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold),
+        margin: EdgeInsets.only(bottom: 50, left: 12, right: 12, top: 50),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  height: MediaQuery.of(context).size.width * .1,
+                  child: Center(
+                    child: new RichText(
+                      text: new TextSpan(
+                        style: new TextStyle(
+                          fontSize: 14.0,
+                          color: Colors.black,
                         ),
-                        new TextSpan(
-                          text: '@gmail.com',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.width * .2,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Material(
-                      child: TextFormField(
-                        autofocus: true,
-                        validator: (value) {
-                          if (value.isEmpty)
-                            return "Username must not be empty";
-                        },
-                        controller: userController,
-                        decoration: new InputDecoration(
-                          border: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
+                        children: <TextSpan>[
+                          new TextSpan(
+                            text: 'username',
+                            style: new TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold),
                           ),
-                          focusedBorder: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
+                          new TextSpan(
+                            text: '@gmail.com',
                           ),
-                          enabledBorder: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          errorBorder: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          filled: true,
-                          hintText: "Type in only Username",
-                          hintStyle: TextStyle(fontSize: 16.0),
-                        ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.width * .1,
-                child: Center(
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: RaisedButton(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18.0),
-                      ),
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: Text(
-                        'Let\'s chat with your friend.',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSecondary),
-                      ),
-                      onPressed: () async {
-                        FocusScope.of(context).requestFocus(focusNode);
-                        final form = _formKey.currentState;
-                        if (form.validate()) {
-                          _formKey.currentState.save();
-                          QuerySnapshot doc = await dbHelper.getUserByEmail(
-                              userController.text + '@gmail.com');
-                          if (doc.documents.length != 0) {
-                            DocumentSnapshot user = doc.documents[0];
-                            Map<String, dynamic> userData = user.data;
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatDetailed(
-                                  userData: userData,
-                                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.width * .2,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Material(
+                        child: TextField(
+                          autofocus: true,
+                          controller: userController,
+                          decoration: new InputDecoration(
+                            border: new OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
                               ),
-                            );
-                            print(user.data['name'].toString());
+                              borderRadius: const BorderRadius.all(
+                                const Radius.circular(10.0),
+                              ),
+                            ),
+                            focusedBorder: new OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                const Radius.circular(10.0),
+                              ),
+                            ),
+                            enabledBorder: new OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                const Radius.circular(10.0),
+                              ),
+                            ),
+                            errorBorder: new OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              borderRadius: const BorderRadius.all(
+                                const Radius.circular(10.0),
+                              ),
+                            ),
+                            filled: true,
+                            hintText: "Type in only Username",
+                            hintStyle: TextStyle(fontSize: 16.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.width * .1,
+                  child: Center(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: RaisedButton(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                        ),
+                        color: Theme.of(context).colorScheme.secondary,
+                        child: Text(
+                          'Let\'s chat with your friend.',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSecondary),
+                        ),
+                        onPressed: () async {
+                          if (userController.text.isNotEmpty) {
+                            String username = userController.text.toString();
+                            userController.clear();
+                            QuerySnapshot doc = await dbHelper
+                                .getUserByEmail(username + '@gmail.com');
+                            if (doc.documents.length != 0) {
+                              DocumentSnapshot user = doc.documents[0];
+                              Map<String, dynamic> userData = user.data;
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatDetailed(
+                                    userData: userData,
+                                  ),
+                                ),
+                              );
+                              print(user.data['name'].toString());
+                            } else {
+                              showSnackPlz(context, username);
+                              Navigator.pop(context);
+                            }
                           } else {
-                            print('No user');
+                            showSnackPlzWithMessage(context, 'Empty Username');
                             Navigator.pop(context);
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  showSnackPlz(BuildContext context, String username) {
+    final SnackBar snackMe = SnackBar(
+      content: new RichText(
+        text: new TextSpan(
+          style: new TextStyle(
+            fontSize: 14.0,
+          ),
+          children: <TextSpan>[
+            new TextSpan(
+              text: 'User with email ',
+            ),
+            new TextSpan(
+              text: username,
+              style: new TextStyle(fontWeight: FontWeight.bold),
+            ),
+            new TextSpan(
+              text: '@gmail.com not in the database!',
+            ),
+          ],
+        ),
+      ),
+    );
+    _scaffKey.currentState.showSnackBar(snackMe);
+  }
+
+  showSnackPlzWithMessage(BuildContext context, String message) {
+    final SnackBar snackMe = SnackBar(
+      content: new Text(message),
+    );
+    _scaffKey.currentState.showSnackBar(snackMe);
   }
 }
