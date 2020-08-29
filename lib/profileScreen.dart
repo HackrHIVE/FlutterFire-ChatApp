@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'Helper/OfflineStore.dart';
 import 'auth.dart';
@@ -23,6 +24,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: widget.userData == null
+          ? Theme.of(context).colorScheme.secondary
+          : Theme.of(context).colorScheme.primary,
       body: (widget.userData == null)
           ? FutureBuilder(
               future: offlineStorage.getUserInfo(),
@@ -45,22 +49,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               CircleAvatar(
-                                radius: 20,
+                                radius: 40,
                                 backgroundImage: NetworkImage(
                                   user['photo'],
                                 ),
                               ),
                               Text(
                                 user['name'],
-                                style: TextStyle(
+                                style: GoogleFonts.lato(
                                   fontSize: 20,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                               Text(
                                 user['email'],
-                                style: TextStyle(
+                                style: GoogleFonts.lato(
                                   fontSize: 14,
+                                  fontWeight: FontWeight.w400,
                                 ),
+                              ),
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.02,
                               ),
                               MaterialButton(
                                 onPressed: () => authService.signOut(),
@@ -97,28 +107,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         CircleAvatar(
-                          radius: 20,
+                          radius: 40,
                           backgroundImage: NetworkImage(
                             widget.userData['photo'].toString(),
                           ),
                         ),
                         Text(
                           widget.userData['name'].toString(),
-                          style: TextStyle(
+                          style: GoogleFonts.lato(
                             fontSize: 20,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         Text(
                           widget.userData['email'].toString(),
-                          style: TextStyle(
+                          style: GoogleFonts.lato(
                             fontSize: 14,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
-                        MaterialButton(
-                          onPressed: () => authService.signOut(),
-                          child: Text('Signout'),
-                          textColor: Theme.of(context).colorScheme.onSecondary,
-                          color: Theme.of(context).colorScheme.secondary,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.02,
                         ),
                         FloatingActionButton(
                           child: Icon(
