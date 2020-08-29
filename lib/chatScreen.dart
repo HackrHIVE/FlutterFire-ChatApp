@@ -125,6 +125,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                         ),
                                         Text(
                                           _user['name'].toString(),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                         SizedBox(
                                           width: MediaQuery.of(context)
@@ -225,7 +229,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildPopUpMessage(context) {
-    final _formKey = GlobalKey<FormState>();
     return Align(
       alignment: Alignment.topCenter,
       child: Container(
@@ -238,134 +241,131 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         margin: EdgeInsets.only(bottom: 50, left: 12, right: 12, top: 50),
         child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: <Widget>[
-                SizedBox(
-                  height: MediaQuery.of(context).size.width * .1,
-                  child: Center(
-                    child: new RichText(
-                      text: new TextSpan(
-                        style: new TextStyle(
-                          fontSize: 14.0,
-                          color: Colors.black,
+          child: Column(
+            children: <Widget>[
+              SizedBox(
+                height: MediaQuery.of(context).size.width * .1,
+                child: Center(
+                  child: new RichText(
+                    text: new TextSpan(
+                      style: new TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black,
+                      ),
+                      children: <TextSpan>[
+                        new TextSpan(
+                          text: 'username',
+                          style: new TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold),
                         ),
-                        children: <TextSpan>[
-                          new TextSpan(
-                            text: 'username',
-                            style: new TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold),
+                        new TextSpan(
+                          text: '@gmail.com',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.width * .2,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Material(
+                      child: TextField(
+                        autofocus: true,
+                        controller: userController,
+                        decoration: new InputDecoration(
+                          border: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
                           ),
-                          new TextSpan(
-                            text: '@gmail.com',
+                          focusedBorder: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
                           ),
-                        ],
+                          enabledBorder: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
+                          ),
+                          errorBorder: new OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              const Radius.circular(10.0),
+                            ),
+                          ),
+                          filled: true,
+                          hintText: "Type in only Username",
+                          hintStyle: TextStyle(fontSize: 16.0),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.width * .2,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Material(
-                        child: TextField(
-                          autofocus: true,
-                          controller: userController,
-                          decoration: new InputDecoration(
-                            border: new OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                const Radius.circular(10.0),
-                              ),
-                            ),
-                            focusedBorder: new OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                const Radius.circular(10.0),
-                              ),
-                            ),
-                            enabledBorder: new OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                const Radius.circular(10.0),
-                              ),
-                            ),
-                            errorBorder: new OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                              borderRadius: const BorderRadius.all(
-                                const Radius.circular(10.0),
-                              ),
-                            ),
-                            filled: true,
-                            hintText: "Type in only Username",
-                            hintStyle: TextStyle(fontSize: 16.0),
-                          ),
-                        ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.width * .1,
+                child: Center(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: RaisedButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18.0),
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.width * .1,
-                  child: Center(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: RaisedButton(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18.0),
-                        ),
-                        color: Theme.of(context).colorScheme.secondary,
-                        child: Text(
-                          'Let\'s chat with your friend.',
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSecondary),
-                        ),
-                        onPressed: () async {
-                          if (userController.text.isNotEmpty) {
-                            String username = userController.text.toString();
-                            userController.clear();
-                            QuerySnapshot doc = await dbHelper
-                                .getUserByEmail(username + '@gmail.com');
-                            if (doc.documents.length != 0) {
-                              DocumentSnapshot user = doc.documents[0];
-                              Map<String, dynamic> userData = user.data;
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatDetailed(
-                                    userData: userData,
-                                  ),
+                      color: Theme.of(context).colorScheme.secondary,
+                      child: Text(
+                        'Let\'s chat with your friend.',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSecondary),
+                      ),
+                      onPressed: () async {
+                        if (userController.text.isNotEmpty) {
+                          String username = userController.text.toString();
+                          userController.clear();
+                          QuerySnapshot doc = await dbHelper
+                              .getUserByEmail(username + '@gmail.com');
+                          if (doc.documents.length != 0) {
+                            DocumentSnapshot user = doc.documents[0];
+                            Map<String, dynamic> userData = user.data;
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatDetailed(
+                                  userData: userData,
                                 ),
-                              );
-                              print(user.data['name'].toString());
-                            } else {
-                              showSnackPlz(context, username);
-                              Navigator.pop(context);
-                            }
+                              ),
+                            );
+                            print(user.data['name'].toString());
                           } else {
-                            showSnackPlzWithMessage(context, 'Empty Username');
+                            showSnackPlz(context, username);
                             Navigator.pop(context);
                           }
-                        },
-                      ),
+                        } else {
+                          showSnackPlzWithMessage(context, 'Empty Username');
+                          Navigator.pop(context);
+                        }
+                      },
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
