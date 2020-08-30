@@ -32,7 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
-            barrierDismissible: false,
+            // barrierDismissible: false,
             context: context,
             builder: (context) => _buildPopUpMessage(context),
           );
