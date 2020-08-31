@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_chatapp/profileScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'Helper/Database.dart';
 import 'Helper/OfflineStore.dart';
@@ -20,30 +23,36 @@ class _ChatDetailedState extends State<ChatDetailed> {
   String chatId;
   OfflineStorage offlineStorage;
   Map<String, dynamic> userData;
+  final _scaffKey = GlobalKey<ScaffoldState>();
+
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
     messageController = new TextEditingController();
     dbHelper = new DatabaseHelper();
     offlineStorage = new OfflineStorage();
-    offlineStorage.getUserInfo().then((val) {
-      setState(() {
-        Map<dynamic, dynamic> user = val;
-        userId = widget.userData['uid'].toString();
-        myId = user['uid'].toString();
-        chatId = dbHelper.generateChatId(myId, userId);
-        userData = widget.userData;
-        print("caught User : " + userData['name'].toString());
-      });
-    });
+    offlineStorage.getUserInfo().then(
+      (val) {
+        setState(
+          () {
+            Map<dynamic, dynamic> user = val;
+            userId = widget.userData['uid'].toString();
+            myId = user['uid'].toString();
+            chatId = dbHelper.generateChatId(myId, userId);
+            userData = widget.userData;
+            print("caught User : " + userData['name'].toString());
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Theme.of(context).colorScheme.primary,
-      // ),
+      key: _scaffKey,
       body: Column(
         children: [
           AppBar(
@@ -109,9 +118,16 @@ class _ChatDetailedState extends State<ChatDetailed> {
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Icon(
-            Icons.image,
-            color: Theme.of(context).colorScheme.secondary,
+          child: InkWell(
+            onTap: () => showDialog(
+              // barrierDismissible: false,
+              context: context,
+              builder: (context) => _buildPopUpImagePicker(context),
+            ),
+            child: Icon(
+              Icons.image,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
           ),
         ),
         Flexible(
@@ -302,15 +318,27 @@ class _ChatDetailedState extends State<ChatDetailed> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            Text(
-              message.data['message'].toString(),
-              style: TextStyle(
-                color: isMe
-                    ? Theme.of(context).colorScheme.onSecondary
-                    : Theme.of(context).colorScheme.onPrimary,
-                fontSize: 16.0,
-              ),
-            ),
+            message.data['isText']
+                ? Text(
+                    message.data['message'].toString(),
+                    style: TextStyle(
+                      color: isMe
+                          ? Theme.of(context).colorScheme.onSecondary
+                          : Theme.of(context).colorScheme.onPrimary,
+                      fontSize: 16.0,
+                    ),
+                  )
+                : Container(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(
+                          message.data['photo'].toString(),
+                        ),
+                        fit: BoxFit.fitWidth,
+                      ),
+                    ),
+                  ),
           ],
         ),
         decoration: BoxDecoration(
@@ -329,5 +357,154 @@ class _ChatDetailedState extends State<ChatDetailed> {
         ),
       ),
     );
+  }
+
+  Widget _buildPopUpImagePicker(context) {
+    PickedFile _imageFile;
+    return StatefulBuilder(
+      builder: (context, setState) => Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          padding: EdgeInsets.all(8.0),
+          height: MediaQuery.of(context).size.height * .6,
+          width: MediaQuery.of(context).size.width * .6,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(40),
+          ),
+          margin: EdgeInsets.only(bottom: 50, left: 12, right: 12, top: 50),
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                if (_imageFile == null)
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * .2,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: MaterialButton(
+                          textColor: Theme.of(context).colorScheme.onPrimary,
+                          onPressed: () async {
+                            PickedFile image = await _picker.getImage(
+                                source: ImageSource.gallery);
+                            setState(() {
+                              _imageFile = image;
+                            });
+                          },
+                          color: Theme.of(context).colorScheme.primary,
+                          child: Text('Image from Gallery'),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_imageFile == null)
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * .2,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: MaterialButton(
+                          textColor: Theme.of(context).colorScheme.onPrimary,
+                          onPressed: () async {
+                            PickedFile image = await _picker.getImage(
+                                source: ImageSource.camera);
+                            setState(() {
+                              _imageFile = image;
+                            });
+                          },
+                          color: Theme.of(context).colorScheme.primary,
+                          child: Text('Image from Camera'),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_imageFile != null)
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * .40,
+                    child: Container(
+                      margin: EdgeInsets.all(8.0),
+                      height: MediaQuery.of(context).size.height * .4,
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              fit: BoxFit.fitHeight,
+                              image: Image.asset(_imageFile.path).image)),
+                    ),
+                  ),
+                if (_imageFile != null)
+                  SizedBox(
+                    height: MediaQuery.of(context).size.width * .1,
+                    child: Center(
+                      child: MaterialButton(
+                        color: Theme.of(context).colorScheme.secondary,
+                        textColor: Theme.of(context).colorScheme.onSecondary,
+                        onPressed: () => setState(() {
+                          _imageFile = null;
+                        }),
+                        child: Text('Remove Image'),
+                      ),
+                    ),
+                  ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.width * .15,
+                  child: Center(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: FloatingActionButton(
+                        onPressed: () async {
+                          if (_imageFile != null) print("Image Sent!");
+                          //TODO: Add Firebase Storage into app.
+                          Navigator.pop(context);
+                          // String message = messageController.text;
+                          // if (message.isNotEmpty) {
+                          //   messageController.clear();
+                          //   await dbHelper.sendMessage(userId, myId, message);
+                          // }
+                        },
+                        child: Icon(
+                          Icons.send,
+                          color: Theme.of(context).colorScheme.onSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  showSnackPlz(BuildContext context, String username) {
+    final SnackBar snackMe = SnackBar(
+      content: new RichText(
+        text: new TextSpan(
+          style: new TextStyle(
+            fontSize: 14.0,
+          ),
+          children: <TextSpan>[
+            new TextSpan(
+              text: 'User with email ',
+            ),
+            new TextSpan(
+              text: username,
+              style: new TextStyle(fontWeight: FontWeight.bold),
+            ),
+            new TextSpan(
+              text: '@gmail.com not in the database!',
+            ),
+          ],
+        ),
+      ),
+    );
+    _scaffKey.currentState.showSnackBar(snackMe);
+  }
+
+  showSnackPlzWithMessage(BuildContext context, String message) {
+    final SnackBar snackMe = SnackBar(
+      content: new Text(message),
+    );
+    _scaffKey.currentState.showSnackBar(snackMe);
   }
 }
