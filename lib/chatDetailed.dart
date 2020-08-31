@@ -20,35 +20,30 @@ class _ChatDetailedState extends State<ChatDetailed> {
   String chatId;
   OfflineStorage offlineStorage;
   Map<String, dynamic> userData;
-  TextEditingController userController;
-  final _scaffKey = GlobalKey<ScaffoldState>();
   @override
   void initState() {
     super.initState();
     messageController = new TextEditingController();
-    userController = new TextEditingController();
     dbHelper = new DatabaseHelper();
     offlineStorage = new OfflineStorage();
-    offlineStorage.getUserInfo().then(
-      (val) {
-        setState(
-          () {
-            Map<dynamic, dynamic> user = val;
-            userId = widget.userData['uid'].toString();
-            myId = user['uid'].toString();
-            chatId = dbHelper.generateChatId(myId, userId);
-            userData = widget.userData;
-            print("caught User : " + userData['name'].toString());
-          },
-        );
-      },
-    );
+    offlineStorage.getUserInfo().then((val) {
+      setState(() {
+        Map<dynamic, dynamic> user = val;
+        userId = widget.userData['uid'].toString();
+        myId = user['uid'].toString();
+        chatId = dbHelper.generateChatId(myId, userId);
+        userData = widget.userData;
+        print("caught User : " + userData['name'].toString());
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffKey,
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.primary,
+      // ),
       body: Column(
         children: [
           AppBar(
@@ -114,16 +109,9 @@ class _ChatDetailedState extends State<ChatDetailed> {
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: InkWell(
-            onTap: () => showDialog(
-              // barrierDismissible: false,
-              context: context,
-              builder: (context) => _buildPopUpImagePicker(context),
-            ),
-            child: Icon(
-              Icons.image,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
+          child: Icon(
+            Icons.image,
+            color: Theme.of(context).colorScheme.secondary,
           ),
         ),
         Flexible(
@@ -341,181 +329,5 @@ class _ChatDetailedState extends State<ChatDetailed> {
         ),
       ),
     );
-  }
-
-  Widget _buildPopUpImagePicker(context) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Container(
-        padding: EdgeInsets.all(8.0),
-        height: MediaQuery.of(context).size.width * .5,
-        width: MediaQuery.of(context).size.width * .6,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(40),
-        ),
-        margin: EdgeInsets.only(bottom: 50, left: 12, right: 12, top: 50),
-        child: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              SizedBox(
-                height: MediaQuery.of(context).size.width * .1,
-                child: Center(
-                  child: new RichText(
-                    text: new TextSpan(
-                      style: new TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.black,
-                      ),
-                      children: <TextSpan>[
-                        new TextSpan(
-                          text: 'username',
-                          style: new TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        new TextSpan(
-                          text: '@gmail.com',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.width * .2,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Material(
-                      child: TextField(
-                        autofocus: true,
-                        controller: userController,
-                        decoration: new InputDecoration(
-                          border: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          focusedBorder: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          enabledBorder: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          errorBorder: new OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          filled: true,
-                          hintText: "Type in only Username",
-                          hintStyle: TextStyle(fontSize: 16.0),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.width * .1,
-                child: Center(
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: RaisedButton(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18.0),
-                      ),
-                      color: Theme.of(context).colorScheme.secondary,
-                      child: Text(
-                        'Let\'s chat with your friend.',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSecondary),
-                      ),
-                      onPressed: () async {
-                        if (userController.text.isNotEmpty) {
-                          String username = userController.text.toString();
-                          userController.clear();
-                          QuerySnapshot doc = await dbHelper
-                              .getUserByEmail(username + '@gmail.com');
-                          if (doc.documents.length != 0) {
-                            DocumentSnapshot user = doc.documents[0];
-                            Map<String, dynamic> userData = user.data;
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatDetailed(
-                                  userData: userData,
-                                ),
-                              ),
-                            );
-                            print(user.data['name'].toString());
-                          } else {
-                            showSnackPlz(context, username);
-                            Navigator.pop(context);
-                          }
-                        } else {
-                          showSnackPlzWithMessage(context, 'Empty Username');
-                          Navigator.pop(context);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  showSnackPlz(BuildContext context, String username) {
-    final SnackBar snackMe = SnackBar(
-      content: new RichText(
-        text: new TextSpan(
-          style: new TextStyle(
-            fontSize: 14.0,
-          ),
-          children: <TextSpan>[
-            new TextSpan(
-              text: 'User with email ',
-            ),
-            new TextSpan(
-              text: username,
-              style: new TextStyle(fontWeight: FontWeight.bold),
-            ),
-            new TextSpan(
-              text: '@gmail.com not in the database!',
-            ),
-          ],
-        ),
-      ),
-    );
-    _scaffKey.currentState.showSnackBar(snackMe);
-  }
-
-  showSnackPlzWithMessage(BuildContext context, String message) {
-    final SnackBar snackMe = SnackBar(
-      content: new Text(message),
-    );
-    _scaffKey.currentState.showSnackBar(snackMe);
   }
 }
