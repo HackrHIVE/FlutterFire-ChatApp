@@ -54,7 +54,7 @@ class DatabaseHelper {
           .document(generateChatId(to, from))
           .collection('messages')
           .add(
-        {'from': from, 'message': msg, 'time': now},
+        {'from': from, 'message': msg, 'time': now, 'isText': true},
       );
       await tempDb
           .collection('chats')
@@ -67,7 +67,7 @@ class DatabaseHelper {
           .document(chatId)
           .collection('messages')
           .add(
-        {'from': from, 'message': msg, 'time': now},
+        {'from': from, 'message': msg, 'time': now, 'isText': true},
       );
       await tempDb
           .collection('chats')
