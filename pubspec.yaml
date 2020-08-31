@@ -36,6 +36,7 @@ dependencies:
   rxdart: ^0.24.1
   persistent_bottom_nav_bar: ^1.5.5
   shared_preferences: ^0.5.8
+  google_fonts: ^1.1.0
 
 
 # For information on the generic Dart part of this file, see the
