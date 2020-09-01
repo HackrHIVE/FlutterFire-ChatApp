@@ -390,6 +390,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
                         child: Hero(
                           tag: snapshot.data.toString(),
                           child: Container(
+                            margin: EdgeInsets.all(4.0),
                             height: MediaQuery.of(context).size.width * 0.6,
                             decoration: BoxDecoration(
                               image: DecorationImage(
