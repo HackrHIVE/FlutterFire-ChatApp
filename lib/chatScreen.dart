@@ -200,7 +200,6 @@ class _ChatScreenState extends State<ChatScreen> {
     'April',
     'May',
     'June',
-    'June',
     'July',
     'August',
     'September',
