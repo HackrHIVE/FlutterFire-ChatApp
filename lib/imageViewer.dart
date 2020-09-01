@@ -18,7 +18,9 @@ class _ImageViewerState extends State<ImageViewer> {
           child: Container(
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
-            child: Image.network(widget.filePath),
+            child: Image.network(
+              widget.filePath,
+            ),
           ),
         ),
       ),
