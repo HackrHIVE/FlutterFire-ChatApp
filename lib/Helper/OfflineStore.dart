@@ -1,8 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OfflineStorage {
-  //TODO:Add all functionalities of Offline Shared Preference here required for app.
-
   SharedPreferences pref;
 
   saveUserInfo(String photo, String name, String email, String uid) async {
