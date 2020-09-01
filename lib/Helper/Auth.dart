@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'Helper/OfflineStore.dart';
+import 'OfflineStore.dart';
 
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
