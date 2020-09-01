@@ -1,4 +1,4 @@
-import 'package:firebase_chatapp/auth.dart';
+import 'package:firebase_chatapp/Helper/Auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
