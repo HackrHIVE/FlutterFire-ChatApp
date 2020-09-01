@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -6,11 +7,12 @@ import 'homepage.dart';
 import 'loginpage.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -34,14 +36,34 @@ class MyApp extends StatelessWidget {
         ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: handleHomePage(),
+      home: FutureBuilder(
+        future: _initialization,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            print(snapshot.error.toString());
+            return Center(
+              child: Text('Something went wrong!'),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.done)
+            return handleHomePage();
+          return Scaffold(
+            body: Center(
+              child: Lottie.network(
+                'https://assets2.lottiefiles.com/temp/lf20_XfK5FJ.json',
+                repeat: true,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 Widget handleHomePage() {
   return StreamBuilder(
-    stream: FirebaseAuth.instance.onAuthStateChanged,
+    stream: FirebaseAuth.instance.authStateChanges(),
     builder: (BuildContext context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting)
         return Scaffold(

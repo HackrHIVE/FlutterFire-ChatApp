@@ -199,43 +199,43 @@ class _ChatDetailedState extends State<ChatDetailed> {
 
   StreamBuilder<QuerySnapshot> _chatBody(String userId) {
     return StreamBuilder(
-      stream: Firestore.instance
+      stream: FirebaseFirestore.instance
           .collection('chats')
-          .document(dbHelper.generateChatId(userId, myId))
+          .doc(dbHelper.generateChatId(userId, myId))
           .collection('messages')
           .orderBy('time', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasData)
-          return snapshot.data.documents.length != 0
+          return snapshot.data.docs.length != 0
               ? ListView.builder(
-                  itemCount: snapshot.data.documents.length,
+                  itemCount: snapshot.data.docs.length,
                   reverse: true,
                   itemBuilder: (context, index) {
-                    DocumentSnapshot message = snapshot.data.documents[index];
-                    if (snapshot.data.documents.length == 1)
+                    DocumentSnapshot message = snapshot.data.docs[index];
+                    if (snapshot.data.docs.length == 1)
                       return Column(
                         children: [
-                          _timeDivider(message.data['time']),
+                          _timeDivider(message.data()['time']),
                           _messageItem(message, context),
                         ],
                       );
                     if (index == 0) {
-                      past = message.data['time'];
+                      past = message.data()['time'];
                       return _messageItem(message, context);
                     }
                     Timestamp toPass = past;
-                    if (index == snapshot.data.documents.length - 1)
+                    if (index == snapshot.data.docs.length - 1)
                       return Column(
                         children: [
-                          _timeDivider(message.data['time']),
+                          _timeDivider(message.data()['time']),
                           _messageItem(message, context),
-                          if (!sameDay(toPass, message.data['time']))
+                          if (!sameDay(toPass, message.data()['time']))
                             _timeDivider(toPass),
                         ],
                       );
-                    past = message.data['time'];
-                    return sameDay(message.data['time'], toPass)
+                    past = message.data()['time'];
+                    return sameDay(message.data()['time'], toPass)
                         ? _messageItem(message, context)
                         : Column(
                             children: [
@@ -286,15 +286,15 @@ class _ChatDetailedState extends State<ChatDetailed> {
   }
 
   _messageItem(DocumentSnapshot message, BuildContext context) {
-    final bool isMe = message.data['from'] == myId;
-    Timestamp time = message.data['time'];
+    final bool isMe = message.data()['from'] == myId;
+    Timestamp time = message.data()['time'];
     DateTime ttime = time.toDate();
     String minute = ttime.minute > 9
         ? ttime.minute.toString()
         : '0' + ttime.minute.toString();
     String ampm = ttime.hour >= 12 ? "PM" : "AM";
     int hour = ttime.hour >= 12 ? ttime.hour % 12 : ttime.hour;
-    if (message.data['isText'])
+    if (message.data()['isText'])
       return Align(
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
@@ -322,7 +322,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
                 ),
               ),
               Text(
-                message.data['message'].toString(),
+                message.data()['message'].toString(),
                 style: TextStyle(
                   color: isMe
                       ? Theme.of(context).colorScheme.onSecondary
@@ -349,7 +349,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
         ),
       );
     return FutureBuilder(
-      future: dbHelper.getURLforImage(message.data['photo'].toString()),
+      future: dbHelper.getURLforImage(message.data()['photo'].toString()),
       builder: (context, snapshot) {
         return Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

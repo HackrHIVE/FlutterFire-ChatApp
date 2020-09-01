@@ -53,7 +53,7 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   QuerySnapshot qSnap = snapshot.data;
-                  List<DocumentSnapshot> docs = qSnap.documents;
+                  List<DocumentSnapshot> docs = qSnap.docs;
                   if (docs.length == 0)
                     return Center(
                       child: Text('No Chats yet!'),
@@ -61,7 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   return ListView.builder(
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
-                      List<dynamic> members = docs[index].data['members'];
+                      List<dynamic> members = docs[index].data()['members'];
                       String userId;
                       userId = members.elementAt(0) == myId
                           ? members.elementAt(1)
@@ -71,7 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         builder: (context, _snapshot) {
                           if (_snapshot.hasData) {
                             DocumentSnapshot docSnapUser = _snapshot.data;
-                            Map<String, dynamic> _user = docSnapUser.data;
+                            Map<String, dynamic> _user = docSnapUser.data();
                             print('Sending this user ahead: ' +
                                 _user['name'].toString());
                             return Card(
@@ -137,8 +137,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                               0.5,
                                           child: Align(
                                             alignment: Alignment.centerRight,
-                                            child: _timeDivider(
-                                                docs[index].data['lastActive']),
+                                            child: _timeDivider(docs[index]
+                                                .data()['lastActive']),
                                           ),
                                         ),
                                       ],
@@ -338,9 +338,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           userController.clear();
                           QuerySnapshot doc = await dbHelper
                               .getUserByEmail(username + '@gmail.com');
-                          if (doc.documents.length != 0) {
-                            DocumentSnapshot user = doc.documents[0];
-                            Map<String, dynamic> userData = user.data;
+                          if (doc.docs.length != 0) {
+                            DocumentSnapshot user = doc.docs[0];
+                            Map<String, dynamic> userData = user.data();
                             Navigator.pop(context);
                             Navigator.push(
                               context,
@@ -350,7 +350,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                               ),
                             );
-                            print(user.data['name'].toString());
+                            print(user.data()['name'].toString());
                           } else {
                             showSnackPlz(context, username);
                             Navigator.pop(context);

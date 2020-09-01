@@ -8,65 +8,65 @@ import 'OfflineStore.dart';
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final Firestore _db = Firestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   OfflineStorage offlineStorage = new OfflineStorage();
 
-  Stream<FirebaseUser> user;
+  Stream<User> user;
   Stream<Map<String, dynamic>> profile;
   PublishSubject loading = PublishSubject();
 
   AuthService() {
-    user = _auth.onAuthStateChanged;
+    user = _auth.authStateChanges();
     profile = user.switchMap(
-      (FirebaseUser u) {
+      (User u) {
         if (u != null)
           return _db
               .collection('users')
-              .document(u.uid)
+              .doc(u.uid)
               .snapshots()
-              .map((snap) => snap.data);
+              .map((snap) => snap.data());
         print("FirebaseUser is null!");
         return Stream.empty();
       },
     );
   }
 
-  Future<FirebaseUser> googleSignIn() async {
+  Future<User> googleSignIn() async {
     loading.add(true);
     GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
+    final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-    FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
+    User user = (await _auth.signInWithCredential(credential)).user;
     print("signed in " + user.displayName);
     updateUserData(user);
     await offlineStorage.saveUserInfo(
-        user.photoUrl, user.displayName, user.email, user.uid);
+        user.photoURL, user.displayName, user.email, user.uid);
     return user;
   }
 
-  void updateUserData(FirebaseUser user) async {
-    DocumentReference ref = _db.collection('users').document(user.uid);
-    profile = _auth.onAuthStateChanged.switchMap(
-      (FirebaseUser u) {
+  void updateUserData(User user) async {
+    DocumentReference ref = _db.collection('users').doc(user.uid);
+    profile = _auth.authStateChanges().switchMap(
+      (User u) {
         if (u != null)
           return _db
               .collection('users')
-              .document(u.uid)
+              .doc(u.uid)
               .snapshots()
-              .map((snap) => snap.data);
+              .map((snap) => snap.data());
         return Stream.empty();
       },
     );
-    return ref.setData({
+    return ref.set({
       'uid': user.uid,
       'email': user.email,
-      'photo': user.photoUrl,
+      'photo': user.photoURL,
       'name': user.displayName
-    }, merge: true);
+    }, SetOptions(merge: true));
   }
 
   void signOut() => _auth.signOut();

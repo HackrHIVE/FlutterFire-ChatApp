@@ -6,26 +6,23 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class DatabaseHelper {
-  Firestore _db;
+  FirebaseFirestore _db;
   OfflineStorage offlineStorage;
   FirebaseStorage _firebaseStorage =
       FirebaseStorage(storageBucket: 'gs://fir-realtime-65cf4.appspot.com');
   StorageUploadTask _uploadTask;
 
   DatabaseHelper() {
-    _db = Firestore.instance;
+    _db = FirebaseFirestore.instance;
     offlineStorage = new OfflineStorage();
   }
 
   getUserByUsername(String username) async {
-    return await _db.collection('users').document(username).get();
+    return await _db.collection('users').doc(username).get();
   }
 
   getUserByEmail(String email) async {
-    return await _db
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .getDocuments();
+    return await _db.collection('users').where('email', isEqualTo: email).get();
   }
 
   //TODO:Add all functionalities of Firestore here required for app.
@@ -45,7 +42,7 @@ class DatabaseHelper {
 
   Future<bool> checkChatExistsOrNot(String username1, String username2) async {
     String chatId = generateChatId(username1, username2);
-    DocumentSnapshot doc = await _db.collection('chats').document(chatId).get();
+    DocumentSnapshot doc = await _db.collection('chats').doc(chatId).get();
     return doc.exists;
   }
 
@@ -56,7 +53,7 @@ class DatabaseHelper {
       String msg,
       String path}) async {
     bool existsOrNot = await checkChatExistsOrNot(to, from);
-    Firestore tempDb = Firestore.instance;
+    FirebaseFirestore tempDb = FirebaseFirestore.instance;
     String chatId = generateChatId(from, to);
     Timestamp now = Timestamp.now();
     if (!existsOrNot) {
@@ -64,42 +61,39 @@ class DatabaseHelper {
       isText
           ? await tempDb
               .collection('chats')
-              .document(chatId)
+              .doc(chatId)
               .collection('messages')
               .add(
               {'from': from, 'message': msg, 'time': now, 'isText': true},
             )
           : await tempDb
               .collection('chats')
-              .document(chatId)
+              .doc(chatId)
               .collection('messages')
               .add(
               {'from': from, 'photo': path, 'time': now, 'isText': false},
             );
       await tempDb
           .collection('chats')
-          .document(chatId)
-          .setData({'lastActive': now, 'members': members});
+          .doc(chatId)
+          .set({'lastActive': now, 'members': members});
     } else {
       isText
           ? await tempDb
               .collection('chats')
-              .document(chatId)
+              .doc(chatId)
               .collection('messages')
               .add(
               {'from': from, 'message': msg, 'time': now, 'isText': true},
             )
           : await tempDb
               .collection('chats')
-              .document(chatId)
+              .doc(chatId)
               .collection('messages')
               .add(
               {'from': from, 'photo': path, 'time': now, 'isText': false},
             );
-      await tempDb
-          .collection('chats')
-          .document(chatId)
-          .updateData({'lastActive': now});
+      await tempDb.collection('chats').doc(chatId).update({'lastActive': now});
     }
   }
 
