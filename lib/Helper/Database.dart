@@ -1,9 +1,16 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_chatapp/Helper/OfflineStore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 
 class DatabaseHelper {
   Firestore _db;
   OfflineStorage offlineStorage;
+  FirebaseStorage _firebaseStorage =
+      FirebaseStorage(storageBucket: 'gs://fir-realtime-65cf4.appspot.com');
+  StorageUploadTask _uploadTask;
 
   DatabaseHelper() {
     _db = Firestore.instance;
@@ -42,37 +49,72 @@ class DatabaseHelper {
     return doc.exists;
   }
 
-  sendMessage(String to, String from, String msg) async {
+  sendMessage(
+      {@required String to,
+      @required String from,
+      @required bool isText,
+      String msg,
+      String path}) async {
     bool existsOrNot = await checkChatExistsOrNot(to, from);
     Firestore tempDb = Firestore.instance;
     String chatId = generateChatId(from, to);
+    Timestamp now = Timestamp.now();
     if (!existsOrNot) {
       List<String> members = [to, from];
-      Timestamp now = Timestamp.now();
-      await tempDb
-          .collection('chats')
-          .document(generateChatId(to, from))
-          .collection('messages')
-          .add(
-        {'from': from, 'message': msg, 'time': now, 'isText': true},
-      );
+      isText
+          ? await tempDb
+              .collection('chats')
+              .document(chatId)
+              .collection('messages')
+              .add(
+              {'from': from, 'message': msg, 'time': now, 'isText': true},
+            )
+          : await tempDb
+              .collection('chats')
+              .document(chatId)
+              .collection('messages')
+              .add(
+              {'from': from, 'photo': path, 'time': now, 'isText': false},
+            );
       await tempDb
           .collection('chats')
           .document(chatId)
           .setData({'lastActive': now, 'members': members});
     } else {
-      Timestamp now = Timestamp.now();
-      await tempDb
-          .collection('chats')
-          .document(chatId)
-          .collection('messages')
-          .add(
-        {'from': from, 'message': msg, 'time': now, 'isText': true},
-      );
+      isText
+          ? await tempDb
+              .collection('chats')
+              .document(chatId)
+              .collection('messages')
+              .add(
+              {'from': from, 'message': msg, 'time': now, 'isText': true},
+            )
+          : await tempDb
+              .collection('chats')
+              .document(chatId)
+              .collection('messages')
+              .add(
+              {'from': from, 'photo': path, 'time': now, 'isText': false},
+            );
       await tempDb
           .collection('chats')
           .document(chatId)
           .updateData({'lastActive': now});
     }
+  }
+
+  uploadImage(File _image, String to, String from) {
+    String filePath =
+        'chatImages/${generateChatId(to, from)}/${DateTime.now()}.png';
+    _uploadTask = _firebaseStorage.ref().child(filePath).putFile(_image);
+    return _uploadTask;
+  }
+
+  getURLforImage(String imagePath) async {
+    FirebaseStorage storage = FirebaseStorage.instance;
+    StorageReference sRef = await storage
+        .getReferenceFromUrl('gs://fir-realtime-65cf4.appspot.com');
+    StorageReference pathReference = sRef.child(imagePath);
+    return await pathReference.getDownloadURL();
   }
 }

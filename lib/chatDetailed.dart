@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_chatapp/imageViewer.dart';
 import 'package:firebase_chatapp/profileScreen.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -181,7 +183,8 @@ class _ChatDetailedState extends State<ChatDetailed> {
               String message = messageController.text;
               if (message.isNotEmpty) {
                 messageController.clear();
-                await dbHelper.sendMessage(userId, myId, message);
+                await dbHelper.sendMessage(
+                    to: userId, from: myId, isText: true, msg: message);
               }
             },
             child: Icon(
@@ -257,7 +260,6 @@ class _ChatDetailedState extends State<ChatDetailed> {
     'April',
     'May',
     'June',
-    'June',
     'July',
     'August',
     'September',
@@ -283,7 +285,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
     return pastTime.day == presentTime.day;
   }
 
-  Widget _messageItem(DocumentSnapshot message, BuildContext context) {
+  _messageItem(DocumentSnapshot message, BuildContext context) {
     final bool isMe = message.data['from'] == myId;
     Timestamp time = message.data['time'];
     DateTime ttime = time.toDate();
@@ -292,81 +294,160 @@ class _ChatDetailedState extends State<ChatDetailed> {
         : '0' + ttime.minute.toString();
     String ampm = ttime.hour >= 12 ? "PM" : "AM";
     int hour = ttime.hour >= 12 ? ttime.hour % 12 : ttime.hour;
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-        margin: isMe
-            ? EdgeInsets.only(
-                left: 80.0,
-                bottom: 8.0,
-                top: 8.0,
-              )
-            : EdgeInsets.only(
-                right: 80.0,
-                bottom: 8.0,
-                top: 8.0,
-              ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              hour.toString() + ":" + minute.toString() + " " + ampm,
-              style: TextStyle(
-                color: Color(0xfff0f696),
-                fontSize: 12.0,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            message.data['isText']
-                ? Text(
-                    message.data['message'].toString(),
-                    style: TextStyle(
-                      color: isMe
-                          ? Theme.of(context).colorScheme.onSecondary
-                          : Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 16.0,
-                    ),
-                  )
-                : Container(
-                    width: MediaQuery.of(context).size.width * 0.6,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          message.data['photo'].toString(),
-                        ),
-                        fit: BoxFit.fitWidth,
-                      ),
-                    ),
-                  ),
-          ],
-        ),
-        decoration: BoxDecoration(
-          color: isMe
-              ? Theme.of(context).colorScheme.secondary
-              : Theme.of(context).colorScheme.secondaryVariant,
-          borderRadius: isMe
-              ? BorderRadius.only(
-                  topLeft: Radius.circular(15.0),
-                  bottomLeft: Radius.circular(15.0),
+    if (message.data['isText'])
+      return Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+          margin: isMe
+              ? EdgeInsets.only(
+                  left: 80.0,
+                  bottom: 8.0,
+                  top: 8.0,
                 )
-              : BorderRadius.only(
-                  topRight: Radius.circular(15.0),
-                  bottomRight: Radius.circular(15.0),
+              : EdgeInsets.only(
+                  right: 80.0,
+                  bottom: 8.0,
+                  top: 8.0,
                 ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                hour.toString() + ":" + minute.toString() + " " + ampm,
+                style: TextStyle(
+                  color: Color(0xfff0f696),
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                message.data['message'].toString(),
+                style: TextStyle(
+                  color: isMe
+                      ? Theme.of(context).colorScheme.onSecondary
+                      : Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 16.0,
+                ),
+              )
+            ],
+          ),
+          decoration: BoxDecoration(
+            color: isMe
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.secondaryVariant,
+            borderRadius: isMe
+                ? BorderRadius.only(
+                    topLeft: Radius.circular(15.0),
+                    bottomLeft: Radius.circular(15.0),
+                  )
+                : BorderRadius.only(
+                    topRight: Radius.circular(15.0),
+                    bottomRight: Radius.circular(15.0),
+                  ),
+          ),
         ),
-      ),
+      );
+    return FutureBuilder(
+      future: dbHelper.getURLforImage(message.data['photo'].toString()),
+      builder: (context, snapshot) {
+        return Align(
+          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+            margin: isMe
+                ? EdgeInsets.only(
+                    left: 80.0,
+                    bottom: 8.0,
+                    top: 8.0,
+                  )
+                : EdgeInsets.only(
+                    right: 80.0,
+                    bottom: 8.0,
+                    top: 8.0,
+                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hour.toString() + ":" + minute.toString() + " " + ampm,
+                  style: TextStyle(
+                    color: Color(0xfff0f696),
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                snapshot.hasData
+                    ? InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ImageViewer(
+                              snapshot.data.toString(),
+                            ),
+                          ),
+                        ),
+                        child: Hero(
+                          tag: snapshot.data.toString(),
+                          child: Container(
+                            height: MediaQuery.of(context).size.width * 0.6,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: NetworkImage(snapshot.data.toString()),
+                                fit: BoxFit.fitHeight,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: CircularProgressIndicator(
+                          valueColor: new AlwaysStoppedAnimation(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+              ],
+            ),
+            decoration: BoxDecoration(
+              color: isMe
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.secondaryVariant,
+              borderRadius: isMe
+                  ? BorderRadius.only(
+                      topLeft: Radius.circular(15.0),
+                      bottomLeft: Radius.circular(15.0),
+                    )
+                  : BorderRadius.only(
+                      topRight: Radius.circular(15.0),
+                      bottomRight: Radius.circular(15.0),
+                    ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildPopUpImagePicker(context) {
     PickedFile _imageFile;
+    StorageUploadTask _taskUpload;
+    bool uploadBool = false;
+    double height = MediaQuery.of(context).size.height * 0.4;
+    if (_taskUpload != null)
+      _taskUpload.onComplete.then((value) async {
+        StorageReference sRef = value.ref;
+        String path = await sRef.getPath();
+        await dbHelper.sendMessage(
+            to: userId, from: myId, isText: false, path: path);
+        Navigator.pop(context);
+      });
     return StatefulBuilder(
       builder: (context, setState) => Align(
         alignment: Alignment.topCenter,
         child: Container(
-          padding: EdgeInsets.all(8.0),
-          height: MediaQuery.of(context).size.height * .6,
+          // padding: EdgeInsets.all(8.0),
+          height: height,
           width: MediaQuery.of(context).size.width * .6,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -376,98 +457,136 @@ class _ChatDetailedState extends State<ChatDetailed> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
-                if (_imageFile == null)
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * .2,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: MaterialButton(
-                          textColor: Theme.of(context).colorScheme.onPrimary,
-                          onPressed: () async {
-                            PickedFile image = await _picker.getImage(
-                                source: ImageSource.gallery);
-                            setState(() {
-                              _imageFile = image;
-                            });
-                          },
-                          color: Theme.of(context).colorScheme.primary,
-                          child: Text('Image from Gallery'),
+                if (!uploadBool) ...[
+                  if (_imageFile == null)
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * .2,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: MaterialButton(
+                            textColor:
+                                Theme.of(context).colorScheme.onSecondary,
+                            onPressed: () async {
+                              PickedFile image = await _picker.getImage(
+                                  source: ImageSource.gallery);
+                              setState(() {
+                                _imageFile = image;
+                                height =
+                                    MediaQuery.of(context).size.height * 0.6;
+                              });
+                            },
+                            color: Theme.of(context).colorScheme.secondary,
+                            child: Text('Image from Gallery'),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                if (_imageFile == null)
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * .2,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: MaterialButton(
-                          textColor: Theme.of(context).colorScheme.onPrimary,
-                          onPressed: () async {
-                            PickedFile image = await _picker.getImage(
-                                source: ImageSource.camera);
-                            setState(() {
-                              _imageFile = image;
-                            });
-                          },
-                          color: Theme.of(context).colorScheme.primary,
-                          child: Text('Image from Camera'),
+                  if (_imageFile == null)
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * .2,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: MaterialButton(
+                            textColor:
+                                Theme.of(context).colorScheme.onSecondary,
+                            onPressed: () async {
+                              PickedFile image = await _picker.getImage(
+                                  source: ImageSource.camera);
+                              setState(() {
+                                _imageFile = image;
+                                height =
+                                    MediaQuery.of(context).size.height * 0.6;
+                              });
+                            },
+                            color: Theme.of(context).colorScheme.secondary,
+                            child: Text('Image from Camera'),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                if (_imageFile != null)
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * .40,
-                    child: Container(
+                  if (_imageFile != null)
+                    Container(
+                      padding: EdgeInsets.all(8.0),
                       margin: EdgeInsets.all(8.0),
                       height: MediaQuery.of(context).size.height * .4,
-                      decoration: BoxDecoration(
-                          image: DecorationImage(
-                              fit: BoxFit.fitHeight,
-                              image: Image.asset(_imageFile.path).image)),
-                    ),
-                  ),
-                if (_imageFile != null)
-                  SizedBox(
-                    height: MediaQuery.of(context).size.width * .1,
-                    child: Center(
-                      child: MaterialButton(
-                        color: Theme.of(context).colorScheme.secondary,
-                        textColor: Theme.of(context).colorScheme.onSecondary,
-                        onPressed: () => setState(() {
-                          _imageFile = null;
-                        }),
-                        child: Text('Remove Image'),
+                      child: Image.file(
+                        File(_imageFile.path),
+                        fit: BoxFit.fitHeight,
                       ),
                     ),
-                  ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.width * .15,
-                  child: Center(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: FloatingActionButton(
-                        onPressed: () async {
-                          if (_imageFile != null) print("Image Sent!");
-                          //TODO: Add Firebase Storage into app.
-                          Navigator.pop(context);
-                          // String message = messageController.text;
-                          // if (message.isNotEmpty) {
-                          //   messageController.clear();
-                          //   await dbHelper.sendMessage(userId, myId, message);
-                          // }
-                        },
-                        child: Icon(
-                          Icons.send,
-                          color: Theme.of(context).colorScheme.onSecondary,
+                  if (_imageFile != null)
+                    SizedBox(
+                      height: MediaQuery.of(context).size.width * .1,
+                      child: Center(
+                        child: MaterialButton(
+                          color: Theme.of(context).colorScheme.secondary,
+                          textColor: Theme.of(context).colorScheme.onSecondary,
+                          onPressed: () => setState(() {
+                            _imageFile = null;
+                            height = MediaQuery.of(context).size.height * 0.4;
+                          }),
+                          child: Text('Clear Selection'),
                         ),
                       ),
                     ),
+                  if (_imageFile != null)
+                    SizedBox(
+                      height: MediaQuery.of(context).size.width * .2,
+                      child: Center(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: FloatingActionButton(
+                            onPressed: () async {
+                              if (_imageFile != null) {
+                                print("Image Sent!");
+                                _taskUpload = await dbHelper.uploadImage(
+                                    File(_imageFile.path), userId, myId);
+                                setState(() => uploadBool = true);
+                              }
+                            },
+                            child: Icon(
+                              Icons.send,
+                              color: Theme.of(context).colorScheme.onSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ] else ...[
+                  StreamBuilder<StorageTaskEvent>(
+                    stream: _taskUpload.events,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        StorageTaskEvent taskEvent = snapshot.data;
+                        StorageTaskSnapshot event = snapshot.data.snapshot;
+                        if (taskEvent.type == StorageTaskEventType.success) {
+                          StorageReference sRef = event.ref;
+                          sRef.getPath().then((path) async {
+                            await dbHelper.sendMessage(
+                                to: userId,
+                                from: myId,
+                                isText: false,
+                                path: path);
+                            Navigator.pop(context);
+                          });
+                        }
+                      }
+                      return Container(
+                        height: MediaQuery.of(context).size.height * .5,
+                        width: MediaQuery.of(context).size.width * .5,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor: new AlwaysStoppedAnimation(
+                              Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ),
+                ]
               ],
             ),
           ),
@@ -497,13 +616,6 @@ class _ChatDetailedState extends State<ChatDetailed> {
           ],
         ),
       ),
-    );
-    _scaffKey.currentState.showSnackBar(snackMe);
-  }
-
-  showSnackPlzWithMessage(BuildContext context, String message) {
-    final SnackBar snackMe = SnackBar(
-      content: new Text(message),
     );
     _scaffKey.currentState.showSnackBar(snackMe);
   }
