@@ -1,5 +1,6 @@
 import 'package:firebase_chatapp/Helper/Auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -14,66 +15,36 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            StreamBuilder(
-              stream: authService.user,
-              builder: (context, snapshot) {
-                return MaterialButton(
-                  onPressed: () => authService.googleSignIn(),
-                  color: Colors.white,
-                  textColor: Colors.black,
-                  child: Text('Login with Google'),
-                );
-              },
+            // SignInButton(
+            //   Buttons.Google,
+            //   onPressed: () => authService.googleSignIn(),
+            // ),
+            SignInButtonBuilder(
+              key: ValueKey("Google"),
+              text: 'Sign in with Google',
+              textColor: Theme.of(context).colorScheme.onSecondary,
+              image: Container(
+                margin: EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image(
+                    image: AssetImage(
+                      'assets/logos/google_light.png',
+                      package: 'flutter_signin_button',
+                    ),
+                    height: 36.0,
+                  ),
+                ),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              onPressed: () => authService.googleSignIn(),
+              padding: EdgeInsets.all(4.0),
+              innerPadding: EdgeInsets.all(0.0),
+              height: 36.0,
             ),
-            // LoginData(),
           ],
         ),
       ),
-    );
-  }
-}
-
-class LoginData extends StatefulWidget {
-  @override
-  _LoginDataState createState() => _LoginDataState();
-}
-
-class _LoginDataState extends State<LoginData> {
-  Map<String, dynamic> _profile;
-  bool _loading = false;
-  @override
-  void initState() {
-    super.initState();
-    authService.profile.listen(
-      (state) {
-        setState(
-          () {
-            _profile = state;
-          },
-        );
-      },
-    );
-    authService.loading.listen(
-      (value) {
-        setState(
-          () {
-            _loading = value;
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(10.0),
-          child: Text(_profile != null ? _profile.toString() : "No UserData"),
-        ),
-        Text(_loading.toString()),
-      ],
     );
   }
 }
