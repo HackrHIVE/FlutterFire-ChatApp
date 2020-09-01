@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'Helper/OfflineStore.dart';
-import 'auth.dart';
+import 'Helper/auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   Map<String, dynamic> userData;
@@ -16,9 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      offlineStorage = new OfflineStorage();
-    });
+    setState(() => offlineStorage = new OfflineStorage());
   }
 
   @override
