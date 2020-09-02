@@ -126,18 +126,24 @@ class _ChatScreenState extends State<ChatScreen> {
                                                   .width *
                                               0.02,
                                         ),
-                                        Text(
-                                          _user['name'].toString(),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.43,
+                                          child: Text(
+                                            _user['name'].toString(),
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                         ),
                                         SizedBox(
                                           width: MediaQuery.of(context)
                                                   .size
                                                   .width *
-                                              0.5,
+                                              0.3,
                                           child: Align(
                                             alignment: Alignment.centerRight,
                                             child: _timeDivider(docs[index]
