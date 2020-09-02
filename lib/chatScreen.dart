@@ -217,16 +217,13 @@ class _ChatScreenState extends State<ChatScreen> {
         t.minute > 9 ? t.minute.toString() : '0' + t.minute.toString();
     String ampm = t.hour >= 12 ? "PM" : "AM";
     int hour = t.hour >= 12 ? t.hour % 12 : t.hour;
-    return Text(hour.toString() +
-        ':' +
-        minute +
-        ' ' +
-        ampm +
-        ' ' +
-        t.day.toString() +
-        ' ' +
-        months.elementAt(t.month - 1) +
-        ', ' +
+    DateTime press = DateTime.now();
+    if (press.year == t.year && press.month == t.month && press.day == t.day)
+      return Text(hour.toString() + ':' + minute + ' ' + ampm);
+    return Text(t.day.toString() +
+        '/' +
+        (t.month + 1).toString() +
+        '/' +
         t.year.toString());
   }
 
