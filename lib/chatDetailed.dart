@@ -76,15 +76,18 @@ class _ChatDetailedState extends State<ChatDetailed> {
                 width: MediaQuery.of(context).size.width * 0.8,
                 child: Row(
                   children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.1,
-                      height: MediaQuery.of(context).size.width * 0.1,
-                      decoration: new BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: new DecorationImage(
-                          fit: BoxFit.cover,
-                          image: new NetworkImage(
-                            userData['photo'].toString(),
+                    Hero(
+                      tag: userData['photo'].toString(),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        height: MediaQuery.of(context).size.width * 0.1,
+                        decoration: new BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: new DecorationImage(
+                            fit: BoxFit.cover,
+                            image: new NetworkImage(
+                              userData['photo'].toString(),
+                            ),
                           ),
                         ),
                       ),

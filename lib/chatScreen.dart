@@ -98,21 +98,24 @@ class _ChatScreenState extends State<ChatScreen> {
                                   child: Center(
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.15,
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.15,
-                                          decoration: new BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            image: new DecorationImage(
-                                              fit: BoxFit.cover,
-                                              image: new NetworkImage(
-                                                _user['photo'].toString(),
+                                        Hero(
+                                          tag: _user['photo'].toString(),
+                                          child: Container(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.15,
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.15,
+                                            decoration: new BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              image: new DecorationImage(
+                                                fit: BoxFit.cover,
+                                                image: new NetworkImage(
+                                                  _user['photo'].toString(),
+                                                ),
                                               ),
                                             ),
                                           ),

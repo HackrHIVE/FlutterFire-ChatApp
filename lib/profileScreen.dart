@@ -104,10 +104,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: NetworkImage(
-                            widget.userData['photo'].toString(),
+                        Hero(
+                          tag: widget.userData['photo'].toString(),
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundImage: NetworkImage(
+                              widget.userData['photo'].toString(),
+                            ),
                           ),
                         ),
                         Text(
