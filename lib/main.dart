@@ -49,8 +49,8 @@ class MyApp extends StatelessWidget {
             return handleHomePage();
           return Scaffold(
             body: Center(
-              child: Lottie.network(
-                'https://assets2.lottiefiles.com/temp/lf20_XfK5FJ.json',
+              child: Lottie.file(
+                'assets/loader.json',
                 repeat: true,
               ),
             ),
@@ -68,8 +68,8 @@ Widget handleHomePage() {
       if (snapshot.connectionState == ConnectionState.waiting)
         return Scaffold(
           body: Center(
-            child: Lottie.network(
-              'https://assets2.lottiefiles.com/temp/lf20_XfK5FJ.json',
+            child: Lottie.file(
+              'assets/loader.json',
               repeat: true,
             ),
           ),
