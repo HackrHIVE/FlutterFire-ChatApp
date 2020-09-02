@@ -15,10 +15,6 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // SignInButton(
-            //   Buttons.Google,
-            //   onPressed: () => authService.googleSignIn(),
-            // ),
             SignInButtonBuilder(
               key: ValueKey("Google"),
               text: 'Sign in with Google',
