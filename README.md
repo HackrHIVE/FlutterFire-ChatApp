@@ -20,6 +20,18 @@ Chat Application made in Flutter using Firebase for backend.
 
 ---
 ## Screenshots
+![Chats Screen](./Screenshots/chatScreen.jpg?raw=true "Chats Screen")
+![Profile Screen](./Screenshots/profile.jpg?raw=true "My Profile")
+![Other Profile Screen](./Screenshots/otherProfile.jpg?raw=true "Other's Profile")
+![New Chat](./Screenshots/add.jpg?raw=true "New Chat with a friend")
+![Chat Screen](./Screenshots/chat1.jpg?raw=true "Chat")
+![Chat Screen](./Screenshots/chat2.jpg?raw=true "Chat")
+![Image Screen](./Screenshots/image.jpg?raw=true "Image")
+![Send Message](./Screenshots/sendMessage.jpg?raw=true "Send Message")
+![Send Message](./Screenshots/sendMessage1.jpg?raw=true "Send Message")
+![Send Image](./Screenshots/sendImage.jpg?raw=true "Send Image")
+![Send Image](./Screenshots/sendImage1.jpg?raw=true "Send Image")
+![Send Image](./Screenshots/sendImage2.jpg?raw=true "Send Image")
 
 ---
 ## Note
