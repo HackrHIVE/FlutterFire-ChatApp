@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'Helper/Constants.dart';
 import 'Helper/Database.dart';
 import 'Helper/OfflineStore.dart';
 
@@ -44,7 +45,6 @@ class _ChatDetailedState extends State<ChatDetailed> {
             myId = user['uid'].toString();
             chatId = dbHelper.generateChatId(myId, userId);
             userData = widget.userData;
-            print("caught User : " + userData['name'].toString());
           },
         );
       },
@@ -256,26 +256,11 @@ class _ChatDetailedState extends State<ChatDetailed> {
     );
   }
 
-  List<String> months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
   Widget _timeDivider(Timestamp time) {
     DateTime t = time.toDate();
     return Text(t.day.toString() +
         ' ' +
-        months.elementAt(t.month - 1) +
+        Constants.months.elementAt(t.month - 1) +
         ', ' +
         t.year.toString());
   }
@@ -544,7 +529,6 @@ class _ChatDetailedState extends State<ChatDetailed> {
                           child: FloatingActionButton(
                             onPressed: () async {
                               if (_imageFile != null) {
-                                print("Image Sent!");
                                 _taskUpload = await dbHelper.uploadImage(
                                     File(_imageFile.path), userId, myId);
                                 setState(() => uploadBool = true);

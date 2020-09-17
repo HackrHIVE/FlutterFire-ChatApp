@@ -200,21 +200,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  List<String> months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
   Widget _timeDivider(Timestamp time) {
     DateTime t = time.toDate();
     String minute =

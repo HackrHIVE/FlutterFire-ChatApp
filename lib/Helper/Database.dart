@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_chatapp/Helper/Constants.dart';
 import 'package:firebase_chatapp/Helper/OfflineStore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ class DatabaseHelper {
   FirebaseFirestore _db;
   OfflineStorage offlineStorage;
   FirebaseStorage _firebaseStorage =
-      FirebaseStorage(storageBucket: 'gs://fir-realtime-65cf4.appspot.com');
+      FirebaseStorage(storageBucket: Constants.firebaseReferenceURI);
   StorageUploadTask _uploadTask;
 
   DatabaseHelper() {
@@ -25,7 +26,6 @@ class DatabaseHelper {
     return await _db.collection('users').where('email', isEqualTo: email).get();
   }
 
-  //TODO:Add all functionalities of Firestore here required for app.
   getChats(String uid) {
     return _db
         .collection('chats')
@@ -106,8 +106,8 @@ class DatabaseHelper {
 
   getURLforImage(String imagePath) async {
     FirebaseStorage storage = FirebaseStorage.instance;
-    StorageReference sRef = await storage
-        .getReferenceFromUrl('gs://fir-realtime-65cf4.appspot.com');
+    StorageReference sRef =
+        await storage.getReferenceFromUrl(Constants.firebaseReferenceURI);
     StorageReference pathReference = sRef.child(imagePath);
     return await pathReference.getDownloadURL();
   }
