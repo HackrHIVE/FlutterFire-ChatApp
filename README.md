@@ -24,16 +24,20 @@ Chat Application made in Flutter using Firebase for backend.
     <img src="./Screenshots/chatScreen.jpg" height="300em" />
     <img src="./Screenshots/profile.jpg" height="300em" />
     <img src="./Screenshots/otherProfile.jpg" height="300em" />
+    <img src="./Screenshots/add.jpg" height="300em" />
 </p>
-<img src="./Screenshots/add.jpg" height="300em" />
-<img src="./Screenshots/chat1.jpg" height="300em" />
-<img src="./Screenshots/chat2.jpg" height="300em" />
-<img src="./Screenshots/image.jpg" height="300em" />
-<img src="./Screenshots/sendMessage.jpg" height="300em" />
-<img src="./Screenshots/sendMessage1.jpg" height="300em" />
-<img src="./Screenshots/sendImage.jpg" height="300em" />
-<img src="./Screenshots/sendImage1.jpg" height="300em" />
-<img src="./Screenshots/sendImage2.jpg" height="300em" />
+<p float="left">
+    <img src="./Screenshots/chat1.jpg" height="300em" />
+    <img src="./Screenshots/chat2.jpg" height="300em" />
+    <img src="./Screenshots/image.jpg" height="300em" />
+    <img src="./Screenshots/sendMessage.jpg" height="300em" />
+</p>
+<p float="left">
+    <img src="./Screenshots/sendMessage1.jpg" height="300em" />
+    <img src="./Screenshots/sendImage.jpg" height="300em" />
+    <img src="./Screenshots/sendImage1.jpg" height="300em" />
+    <img src="./Screenshots/sendImage2.jpg" height="300em" />
+</p>
 
 ---
 ## Note
