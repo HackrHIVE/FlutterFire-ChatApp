@@ -72,8 +72,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (_snapshot.hasData) {
                             DocumentSnapshot docSnapUser = _snapshot.data;
                             Map<String, dynamic> _user = docSnapUser.data();
-                            print('Sending this user ahead: ' +
-                                _user['name'].toString());
                             return Card(
                               margin: EdgeInsets.all(8.0),
                               elevation: 8.0,

@@ -26,7 +26,6 @@ class AuthService {
               .doc(u.uid)
               .snapshots()
               .map((snap) => snap.data());
-        print("FirebaseUser is null!");
         return Stream.empty();
       },
     );
@@ -41,7 +40,6 @@ class AuthService {
       idToken: googleAuth.idToken,
     );
     User user = (await _auth.signInWithCredential(credential)).user;
-    print("signed in " + user.displayName);
     updateUserData(user);
     await offlineStorage.saveUserInfo(
         user.photoURL, user.displayName, user.email, user.uid);

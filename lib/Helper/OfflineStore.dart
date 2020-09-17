@@ -5,7 +5,6 @@ class OfflineStorage {
 
   saveUserInfo(String photo, String name, String email, String uid) async {
     pref = await SharedPreferences.getInstance();
-    print('saving userInfo');
     await pref.setString("photo", photo);
     await pref.setString("name", name);
     await pref.setString("email", email);
@@ -14,7 +13,6 @@ class OfflineStorage {
 
   getUserInfo() async {
     pref = await SharedPreferences.getInstance();
-    print('getting userInfo');
     String photo = pref.getString("photo");
     String name = pref.getString("name");
     String email = pref.getString("email");
