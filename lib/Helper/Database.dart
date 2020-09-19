@@ -1,21 +1,17 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_chatapp/Helper/Constants.dart';
-import 'package:firebase_chatapp/Helper/OfflineStore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class DatabaseHelper {
   FirebaseFirestore _db;
-  OfflineStorage offlineStorage;
   FirebaseStorage _firebaseStorage =
       FirebaseStorage(storageBucket: Constants.firebaseReferenceURI);
   StorageUploadTask _uploadTask;
 
   DatabaseHelper() {
     _db = FirebaseFirestore.instance;
-    offlineStorage = new OfflineStorage();
   }
 
   getUserByUsername(String username) async {
