@@ -14,43 +14,59 @@ class DatabaseHelper {
     _db = FirebaseFirestore.instance;
   }
 
-  getUserByUsername(String username) async {
+  getUserByUsername({@required String username}) async {
     return await _db.collection('users').doc(username).get();
   }
 
-  getUserByEmail(String email) async {
+  getUserByEmail({@required String email}) async {
     return await _db.collection('users').where('email', isEqualTo: email).get();
   }
 
-  getChats(String uid) {
+  getChats({@required String userId}) {
     return _db
         .collection('chats')
-        .where('members', arrayContains: uid)
+        .where('members', arrayContains: userId)
         .orderBy('lastActive', descending: true)
         .snapshots();
   }
 
-  generateChatId(String username1, String username2) {
+  getChat({
+    @required String userId,
+    @required String myId,
+  }) {
+    String chatId = generateChatId(username1: userId, username2: myId);
+    return _db
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('time', descending: true)
+        .snapshots();
+  }
+
+  generateChatId({@required String username1, @required String username2}) {
     return username1.toString().compareTo(username2.toString()) < 0
         ? username1.toString() + '-' + username2.toString()
         : username2.toString() + '-' + username1.toString();
   }
 
-  Future<bool> checkChatExistsOrNot(String username1, String username2) async {
-    String chatId = generateChatId(username1, username2);
+  Future<bool> checkChatExistsOrNot(
+      {@required String username1, @required String username2}) async {
+    String chatId = generateChatId(username1: username1, username2: username2);
     DocumentSnapshot doc = await _db.collection('chats').doc(chatId).get();
     return doc.exists;
   }
 
-  sendMessage(
-      {@required String to,
-      @required String from,
-      @required bool isText,
-      String msg,
-      String path}) async {
-    bool existsOrNot = await checkChatExistsOrNot(to, from);
+  sendMessage({
+    @required String to,
+    @required String from,
+    @required bool isText,
+    String msg,
+    String path,
+  }) async {
+    bool existsOrNot =
+        await checkChatExistsOrNot(username1: to, username2: from);
     FirebaseFirestore tempDb = FirebaseFirestore.instance;
-    String chatId = generateChatId(from, to);
+    String chatId = generateChatId(username1: from, username2: to);
     Timestamp now = Timestamp.now();
     if (!existsOrNot) {
       List<String> members = [to, from];
@@ -93,10 +109,14 @@ class DatabaseHelper {
     }
   }
 
-  uploadImage(File _image, String to, String from) {
-    String filePath =
-        'chatImages/${generateChatId(to, from)}/${DateTime.now()}.png';
-    _uploadTask = _firebaseStorage.ref().child(filePath).putFile(_image);
+  uploadImage({
+    @required File image,
+    @required String to,
+    @required String from,
+  }) {
+    String chatId = generateChatId(username1: to, username2: from);
+    String filePath = 'chatImages/$chatId/${DateTime.now()}.png';
+    _uploadTask = _firebaseStorage.ref().child(filePath).putFile(image);
     return _uploadTask;
   }
 

@@ -43,7 +43,10 @@ class _ChatDetailedState extends State<ChatDetailed> {
             Map<dynamic, dynamic> user = val;
             userId = widget.userData['uid'].toString();
             myId = user['uid'].toString();
-            chatId = dbHelper.generateChatId(myId, userId);
+            chatId = dbHelper.generateChatId(
+              username1: myId,
+              username2: userId,
+            );
             userData = widget.userData;
           },
         );
@@ -202,12 +205,7 @@ class _ChatDetailedState extends State<ChatDetailed> {
 
   StreamBuilder<QuerySnapshot> _chatBody(String userId) {
     return StreamBuilder(
-      stream: FirebaseFirestore.instance
-          .collection('chats')
-          .doc(dbHelper.generateChatId(userId, myId))
-          .collection('messages')
-          .orderBy('time', descending: true)
-          .snapshots(),
+      stream: dbHelper.getChat(userId: userId, myId: myId),
       builder: (context, snapshot) {
         if (snapshot.hasData)
           return snapshot.data.docs.length != 0
@@ -530,7 +528,10 @@ class _ChatDetailedState extends State<ChatDetailed> {
                             onPressed: () async {
                               if (_imageFile != null) {
                                 _taskUpload = await dbHelper.uploadImage(
-                                    File(_imageFile.path), userId, myId);
+                                  image: File(_imageFile.path),
+                                  to: userId,
+                                  from: myId,
+                                );
                                 setState(() => uploadBool = true);
                               }
                             },

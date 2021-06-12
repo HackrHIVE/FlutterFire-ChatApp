@@ -49,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Map<dynamic, dynamic> user = userDataSnapshot.data;
             String myId = user['uid'];
             return StreamBuilder(
-              stream: dbHelper.getChats(myId),
+              stream: dbHelper.getChats(userId: myId),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   QuerySnapshot qSnap = snapshot.data;
@@ -67,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ? members.elementAt(1)
                           : members.elementAt(0);
                       return FutureBuilder(
-                        future: dbHelper.getUserByUsername(userId),
+                        future: dbHelper.getUserByUsername(username: userId),
                         builder: (context, _snapshot) {
                           if (_snapshot.hasData) {
                             DocumentSnapshot docSnapUser = _snapshot.data;
@@ -325,8 +325,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         if (userController.text.isNotEmpty) {
                           String username = userController.text.toString();
                           userController.clear();
-                          QuerySnapshot doc = await dbHelper
-                              .getUserByEmail(username + '@gmail.com');
+                          QuerySnapshot doc = await dbHelper.getUserByEmail(
+                            email: username + '@gmail.com',
+                          );
                           if (doc.docs.length != 0) {
                             DocumentSnapshot user = doc.docs[0];
                             Map<String, dynamic> userData = user.data();
